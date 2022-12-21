@@ -53,6 +53,9 @@ Shader shaderMulLighting;
 std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
 
 Sphere skyboxSphere(20, 20);
+Box boxCesped;
+// Models complex instances
+Model modelFinnAnim;
 GLuint skyboxTextureID;
 
 GLuint textureCespedID;
@@ -76,9 +79,10 @@ bool exitApp = false;
 int lastMousePosX, offsetX = 0;
 int lastMousePosY, offsetY = 0;
 
-Box boxCesped;
+
 
 // Model matrix definitions
+glm::mat4 modelMatrixFinn = glm::mat4(1.0f);
 
 int modelSelected = 0;
 
@@ -161,6 +165,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	boxCesped.init();
 	boxCesped.setShader(&shaderMulLighting);
+	/*Finn*/
+	modelFinnAnim.loadModel("../models/Finn/finn_9.fbx");
+	modelFinnAnim.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 
@@ -242,7 +249,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Basic objects Delete
 		skyboxSphere.destroy(); 
 		boxCesped.destroy();
-		
+		// Custom objects Delete
+		/*Finn*/
+		modelFinnAnim.destroy();
 		// Textures Delete
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &textureCespedID);
@@ -314,11 +323,35 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
 			enableCountSelected = false;
 			modelSelected++;
-			if (modelSelected > 2)
+			std::cout << "modelSelected = " << modelSelected << std::endl;
+			if (modelSelected > 3)
 				modelSelected = 0;
 		}
 		else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
 			enableCountSelected = true;
+
+		/* Controles Finn*/
+	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		modelMatrixFinn = glm::rotate(modelMatrixFinn, 0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
+		modelFinnAnim.setAnimationIndex(1);
+	}
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		modelMatrixFinn = glm::rotate(modelMatrixFinn, -0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
+		modelFinnAnim.setAnimationIndex(1);
+	}
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0.0f, 0.0f, 0.03f));
+		modelFinnAnim.setAnimationIndex(1);
+	}
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0.0f, 0.0f, -0.03f));
+		modelFinnAnim.setAnimationIndex(1);
+	}
+
 		glfwPollEvents();
 		return continueApplication;
 	}
@@ -326,6 +359,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	void applicationLoop() {
 		bool psi = true;
 
+		modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(3.0f, 0.0f, 0.0f));
 		while (psi) {
 			currTime = TimeManager::Instance().GetTime();
 			if (currTime - lastTime < 0.016666667) {
@@ -396,6 +430,14 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		  /*******************************************
 		  * Custom Anim objects obj
 		  *******************************************/
+			
+			/*Finn*/
+			glm::mat4 modelMatrixFinnBody = glm::mat4(modelMatrixFinn);
+			modelMatrixFinnBody = glm::translate(modelMatrixFinnBody, glm::vec3(0.0f, 0.0f, 0.0f));
+			//modelMatrixFinnBody = glm::rotate(modelMatrixFinnBody, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			modelMatrixFinnBody = glm::scale(modelMatrixFinnBody, glm::vec3(1.0f, 1.0f, 1.0f) * 0.01f);
+			modelFinnAnim.render(modelMatrixFinnBody);
+			modelFinnAnim.setAnimationIndex(5);
 
 		   /*******************************************
 		   * Skybox

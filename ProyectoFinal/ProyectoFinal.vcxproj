@@ -84,13 +84,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc140-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc142-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -104,15 +104,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc140-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc142-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -124,13 +124,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc140-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc142-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -144,15 +144,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\Freetype\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\include;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\CGALib\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glm;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\include;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\assimp\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc140-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Documentos\FAC\CGA\Repositorio\Proyecto\Release;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\OpenAL\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\freealut\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\FreeImage\lib;D:\Proyectos\OpenGL\OpenGLCourseApp\ExternalLibs\ASSIMP\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glfw\lib;D:\Documentos\FAC\CGA\Repositorio\Proyecto\external\glew\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32d.lib;glfw3.lib;opengl32.lib;glu32.lib;assimp-vc142-mt.lib;FreeImaged.lib;alut.lib;OpenAL32.lib;CGALib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
