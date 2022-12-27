@@ -23,6 +23,7 @@
 #include "Headers/Cylinder.h"
 #include "Headers/Box.h"
 #include "Headers/FirstPersonCamera.h"
+#include "Headers/ThirdPersonCamera.h"
 
 //GLM include
 #define GLM_FORCE_RADIANS
@@ -57,7 +58,13 @@ Shader shaderTerrain;
 //Variables para el manejo de la luz ambiental
 glm::vec3 ambientLight, diffuseLight, specularLight, directionLight;
 
-std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
+//Camaras
+std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
+std::shared_ptr<Camera> camera(new ThirdPersonCamera());
+float distanceFromPlayer = 7.0f;
+bool cameraSwitch = false;
+bool cameraState = false;
+//std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
 
 Sphere skyboxSphere(20, 20);
 //Box boxCesped;
@@ -127,6 +134,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action,
 	int mode);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow* window, int button, int state, int mod);
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroy();
 bool processInput(bool continueApplication = true);
@@ -168,6 +176,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
+	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
 	// Init glew
@@ -220,7 +229,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
 	modelLampPost2.setShader(&shaderMulLighting);
 
-	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
+	//camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 
 	// Definimos el tamanio de la imagen
 	int imageWidth, imageHeight;
@@ -502,24 +511,58 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		}
 	}
 
+	void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+		distanceFromPlayer -= yoffset;
+		camera->setDistanceFromTarget(distanceFromPlayer);
+	}
+
 	bool processInput(bool continueApplication) {
 		if (exitApp || glfwWindowShouldClose(window) != 0) {
 			return false;
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			camera->moveFrontCamera(true, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			camera->moveFrontCamera(false, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			camera->moveRightCamera(false, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			camera->moveRightCamera(true, deltaTime);
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-			camera->mouseMoveCamera(offsetX, offsetY, deltaTime);
+		if (cameraSwitch)
+		{
+			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+				cameraFP->moveFrontCamera(true, deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+				cameraFP->moveFrontCamera(false, deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+				cameraFP->moveRightCamera(false, deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+				cameraFP->moveRightCamera(true, deltaTime);
+			if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+				camera->mouseMoveCamera(offsetX, offsetY, deltaTime);
+		}
+		else
+		{
+			if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT))
+			{
+				camera->mouseMoveCamera(offsetX, 0, deltaTime);
+			}
+			if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT))
+			{
+				camera->mouseMoveCamera(0, offsetY, deltaTime);
+			}
+		}
+
 		offsetX = 0;
 		offsetY = 0;
 
+		/*
+		* Cambiar de camaras
+		*/
+		if ((glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+			glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) && !cameraState)
+		{
+			cameraSwitch = !cameraSwitch;
+			cameraState = !cameraState;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+			glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE)
+		{
+			cameraState = !cameraState;
+		}
 		// Seleccionar modelo
 		if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
 			enableCountSelected = false;
@@ -560,6 +603,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	void applicationLoop() {
 		bool psi = true;
 
+		//
+		glm::mat4 view;
+		glm::vec3 target;
+		glm::vec3 axisTarget;
+		float angleTarget;
+
 		modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(3.0f, 3.0f, 0.0f));
 		modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
 
@@ -578,6 +627,37 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			glm::mat4 projection = glm::perspective(glm::radians(45.0f),
 				(float)screenWidth / (float)screenHeight, 0.01f, 100.0f);
 			glm::mat4 view = camera->getViewMatrix();
+
+			if (modelSelected == 3)
+			{
+				axisTarget = glm::axis(glm::quat_cast(modelMatrixFinn));
+				angleTarget = glm::angle(glm::quat_cast(modelMatrixFinn));
+				target = glm::vec3(modelMatrixFinn[3]) + glm::vec3(0.0f, 0.5f, 0.0f);
+			}
+
+			if (std::isnan(angleTarget))
+			{
+				angleTarget = 0.0f;
+			}
+
+			if (axisTarget.y == 0)
+			{
+				angleTarget = -angleTarget;
+			}
+
+
+			if (cameraSwitch)
+			{
+				cameraFP->setPosition(glm::vec3(modelMatrixFinn[3]) + glm::vec3(0.0f, 3.0f, 0.0f));
+				view = cameraFP->getViewMatrix();
+			}
+			else
+			{
+				camera->setCameraTarget(target);
+				camera->setAngleTarget(angleTarget);
+				camera->updateCamera();
+				view = camera->getViewMatrix();
+			}
 
 			// Settea la matriz de vista y projection al shader con solo color
 			shader.setMatrix4("projection", 1, false, glm::value_ptr(projection));
@@ -606,7 +686,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/*******************************************
 			 * Propiedades Luz direccional
 			 *******************************************/
-			shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
+			if (!cameraSwitch) {
+				shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
+
+			}
+			else {
+				shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(cameraFP->getPosition()));
+
+			}
+			//shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
 			shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(ambientLight));
 			shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(diffuseLight));
 			shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(specularLight));
@@ -615,7 +703,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/*******************************************
 			 * Propiedades Luz direccional Terrain
 			 *******************************************/
-			shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
+			if (!cameraSwitch) {
+				shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
+
+			}
+			else {
+				shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(cameraFP->getPosition()));
+
+			}
+			//shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
 			shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(ambientLight));
 			shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(diffuseLight));
 			shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(specularLight));
@@ -777,7 +873,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelMatrixFinn[3][1] = terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]);
 			glm::mat4 modelMatrixFinnBody = glm::mat4(modelMatrixFinn);
 			modelMatrixFinnBody = glm::translate(modelMatrixFinnBody, glm::vec3(0.0f, 0.0f, 0.0f));
-			//modelMatrixFinnBody = glm::rotate(modelMatrixFinnBody, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			modelMatrixFinnBody = glm::scale(modelMatrixFinnBody, glm::vec3(1.0f, 1.0f, 1.0f) * 0.01f);
 			modelFinnAnim.render(modelMatrixFinnBody);
 			modelFinnAnim.setAnimationIndex(0);
