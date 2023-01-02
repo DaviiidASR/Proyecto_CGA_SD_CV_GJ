@@ -113,7 +113,7 @@ int lastMousePosY, offsetY = 0;
 glm::mat4 modelMatrixFinn = glm::mat4(1.0f);
 glm::mat4 modelMatrixHeli = glm::mat4(1.0f);
 
-int animationIndex = 1;
+int animationIndex = 0;
 int modelSelected = 0;
 
 // Lamps positions
@@ -572,7 +572,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		}
 
 		//Process joystick
-		/*if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GLFW_TRUE)
+		if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GLFW_TRUE)
 		{
 			//std::cout << "Esta conectado el joystick 0" << std::endl;
 			int numberAxes, numberBotones;
@@ -616,7 +616,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				tmv = 0;
 				startTimeJump = currTime;
 			}
-		}*/
+		}
 
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 			camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
@@ -639,6 +639,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		{
 			cameraState = !cameraState;
 		}
+
 		// Seleccionar modelo
 		if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
 			enableCountSelected = false;
@@ -654,22 +655,26 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
 			modelMatrixFinn = glm::rotate(modelMatrixFinn, 0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
-			modelFinnAnim.setAnimationIndex(1);
+			animationIndex = 1;
+			//modelFinnAnim.setAnimationIndex(1);
 		}
 		else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
 			modelMatrixFinn = glm::rotate(modelMatrixFinn, -0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
-			modelFinnAnim.setAnimationIndex(1);
+			animationIndex = 1;
+			//modelFinnAnim.setAnimationIndex(1);
 		}
 		else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0.0f, 0.0f, 0.03f));
-			modelFinnAnim.setAnimationIndex(1);
+			animationIndex = 1;
+			//modelFinnAnim.setAnimationIndex(1);
 		}
 		else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
 			modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0.0f, 0.0f, -0.03f));
-			modelFinnAnim.setAnimationIndex(1);
+			animationIndex = 1; 
+			//modelFinnAnim.setAnimationIndex(1);
 		}
 
 		bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
@@ -678,6 +683,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			isJump = true;
 			tmv = 0;
 			startTimeJump = currTime;
+			animationIndex = 4;
+			//modelFinnAnim.setAnimationIndex(4);
 		}
 
 		glfwPollEvents();
@@ -956,12 +963,19 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		  /*******************************************
 		  * Custom Anim objects obj
 		  *******************************************/
-			modelMatrixFinn[3][1] = terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]);
+			modelMatrixFinn[3][1] = -tmv * tmv * gravity + 3.0 * tmv + terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]);
+			tmv = currTime - startTimeJump;
+			if (modelMatrixFinn[3][1] < terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]))
+			{
+				isJump = false;
+				modelMatrixFinn[3][1] = terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]);
+				animationIndex = 1;
+			}
 			glm::mat4 modelMatrixFinnBody = glm::mat4(modelMatrixFinn);
 			modelMatrixFinnBody = glm::translate(modelMatrixFinnBody, glm::vec3(0.0f, 0.0f, 0.0f));
 			modelMatrixFinnBody = glm::scale(modelMatrixFinnBody, glm::vec3(1.0f, 1.0f, 1.0f) * 0.01f);
+			modelFinnAnim.setAnimationIndex(animationIndex);
 			modelFinnAnim.render(modelMatrixFinnBody);
-			modelFinnAnim.setAnimationIndex(0);
 
 		   /*******************************************
 		   * Skybox
