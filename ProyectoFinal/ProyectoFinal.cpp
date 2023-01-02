@@ -44,6 +44,9 @@
 // Include Colision headers functions
 #include "Headers/Colisiones.h"
 
+//Include e text rendering
+#include "Headers/FontTypeRendering.h"
+
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
@@ -79,6 +82,7 @@ Model modelFinnAnim;
 
 Model modelHeliChasis;
 Model modelHeliHeli;
+Model modelGrass;
 // Lamps
 Model modelLamp1;
 Model modelLamp2;
@@ -87,6 +91,7 @@ Model modelLampPost2;
 Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap.png");
 GLuint skyboxTextureID;
 
+FontTypeRendering::FontTypeRendering* textRender;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID, textureTerrainBID, textureTerrainBlendMapID;
 GLuint textureCespedID;
 
@@ -203,7 +208,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 
 	glViewport(0, 0, screenWidth, screenHeight);
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -252,7 +257,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
 	modelLampPost2.setShader(&shaderMulLighting);
 
+	modelGrass.loadModel("../models/grass/grassModel.obj");
+	modelGrass.setShader(&shaderMulLighting);
+
 	//camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
+
+	textRender = new FontTypeRendering::FontTypeRendering(screenWidth, screenHeight);
+	textRender->Initialize();
 
 	// Definimos el tamanio de la imagen
 	int imageWidth, imageHeight;
@@ -481,6 +492,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/*Finn*/
 		modelFinnAnim.destroy();
 
+		/*Grass*/
+		modelGrass.destroy();
 		// Textures Delete
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &textureCespedID);
@@ -977,6 +990,14 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelFinnAnim.setAnimationIndex(animationIndex);
 			modelFinnAnim.render(modelMatrixFinnBody);
 
+			/*Render modelo GRASS*/
+			glDisable(GL_CULL_FACE);
+			glm::vec3 grassPosition = glm::vec3(0.0f);
+			grassPosition.y = terrain.getHeightTerrain(grassPosition.x, grassPosition.z);
+			modelGrass.setPosition(grassPosition);
+			modelGrass.render();
+			glEnable(GL_CULL_FACE);
+
 		   /*******************************************
 		   * Skybox
 		   *******************************************/
@@ -1146,6 +1167,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			//	sphereCollider.render(matrixCollider);
 			//}
 		
+		//UI
+		glEnable(GL_BLEND);
+		textRender->render("Hola mundo", 0, 0, 18, 1.0, 0.45, 0.9);
+		glDisable(GL_BLEND);
+
 		glfwSwapBuffers(window);
 
 
