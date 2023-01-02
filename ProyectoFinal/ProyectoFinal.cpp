@@ -61,6 +61,8 @@ Shader shaderSkybox;
 Shader shaderMulLighting;
 //Shader para el terreno
 Shader shaderTerrain;
+//Shader para las particulas
+Shader shaderParticulasFountain;
 
 //Variables para el manejo de la luz ambiental
 glm::vec3 ambientLight, diffuseLight, specularLight, directionLight;
@@ -82,7 +84,10 @@ Model modelFinnAnim;
 
 Model modelHeliChasis;
 Model modelHeliHeli;
+//Grass
 Model modelGrass;
+// Fountain
+Model modelFountain;
 // Lamps
 Model modelLamp1;
 Model modelLamp2;
@@ -93,7 +98,7 @@ GLuint skyboxTextureID;
 
 FontTypeRendering::FontTypeRendering* textRender;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID, textureTerrainBID, textureTerrainBlendMapID;
-GLuint textureCespedID;
+GLuint textureCespedID, textureParticleFountainID;
 
 GLenum types[6] = {
 GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -117,6 +122,7 @@ int lastMousePosY, offsetY = 0;
 // Model matrix definitions
 glm::mat4 modelMatrixFinn = glm::mat4(1.0f);
 glm::mat4 modelMatrixHeli = glm::mat4(1.0f);
+glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 
 int animationIndex = 0;
 int modelSelected = 0;
@@ -133,6 +139,11 @@ std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24),
 	glm::vec3(25.0f, 0.0f, -53.51f) };
 std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90, -42.2 + 90 };
 
+// Blending model unsorted
+std::map<std::string, glm::vec3> blendingUnsorted = {
+		{"particulasAgua", glm::vec3(0.0f)}
+};
+
 double deltaTime;
 double currTime, lastTime;
 
@@ -143,6 +154,12 @@ bool isJump = false;
 float gravity = 3.1f;
 double tmv = 0.0;
 double startTimeJump = 0.0;
+
+//Definicion de variables para el sistema de partuculas
+GLuint initVel, startTime;
+GLuint VAOParticulas;
+GLuint numParticulas = 8000;
+double currTimeParticulasFountain, lastTimeParticulasFountain;
 
 // Colliders
 std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> > collidersOBB;
@@ -158,6 +175,66 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroy();
 bool processInput(bool continueApplication = true);
+void inicializacionParticulasFountain();
+
+void inicializacionParticulasFountain() {
+	//generarBuffers
+	glGenBuffers(1, &initVel);
+	glGenBuffers(1, &startTime);
+
+	//generara el espacion de todos los buffers
+	int size = numParticulas * 3 * sizeof(float);
+	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+	glBufferData(GL_ARRAY_BUFFER, numParticulas * sizeof(float), NULL, GL_STATIC_DRAW);
+
+	//llenar las velocidades iniciales
+	glm::vec3 v(0.0f);
+	float velocity, theta, pi;
+	GLfloat* data = new GLfloat[numParticulas * 3];
+	for (unsigned int i = 0; i < numParticulas; i++) {
+		theta = glm::mix(0.0f, glm::pi<float>() / 6.0f, ((float)rand() / RAND_MAX));
+		pi = glm::mix(0.0f, glm::two_pi<float>(), ((float)rand() / RAND_MAX));
+		v.x = sinf(theta) * cosf(pi);
+		v.y = cosf(theta);
+		v.z = sinf(theta);
+
+		velocity = glm::mix(0.5f, 0.7f, ((float)rand() / RAND_MAX));
+		v = glm::normalize(v) * velocity;
+		data[3 * i] = v.x;
+		data[3 * i + 1] = v.y;
+		data[3 * i + 2] = v.z;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); //a partir de una memoria almacenada se refresca
+
+	//LLenar el buffer de tiempo de inicio
+	delete[] data;
+	data = new GLfloat[numParticulas];
+	float time = 0.0f;
+	float rate = 0.00075f;
+	for (unsigned int i = 0; i < numParticulas; i++) {
+		data[i] = time;
+		time += rate;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, numParticulas * sizeof(float), data);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	delete[] data;
+
+	glGenVertexArrays(1, &VAOParticulas);
+	glBindVertexArray(VAOParticulas);
+	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+}
 
 // Implementacion de todas las funciones.
 void init(int width, int height, std::string strTitle, bool bFullScreen) {
@@ -215,9 +292,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	// Inicialización de los shaders
 	shader.initialize("../Shaders/colorShader.vs", "../Shaders/colorShader.fs");
-	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
+	/*shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation.vs", "../Shaders/multipleLights.fs");
-	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");
+	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");*/
+	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
+	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_fog.vs", "../Shaders/multipleLights_fog.fs");
+	shaderTerrain.initialize("../Shaders/terrain_fog.vs", "../Shaders/terrain_fog.fs");
+	shaderParticulasFountain.initialize("../Shaders/particlesFountain.vs", "../Shaders/particlesFountain.fs");
 
 	// Inicializacion de los objetos.
 	skyboxSphere.init();
@@ -257,8 +338,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
 	modelLampPost2.setShader(&shaderMulLighting);
 
+	//Grass
 	modelGrass.loadModel("../models/grass/grassModel.obj");
 	modelGrass.setShader(&shaderMulLighting);
+
+	//Fountain
+	modelFountain.loadModel("../models/fountain/fountain.obj");
+	modelFountain.setShader(&shaderMulLighting);
 
 	//camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 
@@ -453,11 +539,46 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			GL_BGRA, GL_UNSIGNED_BYTE, data);
 		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
 		glGenerateMipmap(GL_TEXTURE_2D);
+	}else
+		std::cout << "Failed to load texture" << std::endl;
+	// Libera la memoria de la textura
+	textureTerrainBlendMap.freeImage(bitmap);
+
+	// Definiendo la textura a utilizar
+	Texture textureParticulaAgua("../Textures/bluewater.png");
+	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
+	bitmap = textureParticulaAgua.loadImage(true);
+	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
+	data = textureParticulaAgua.convertToData(bitmap, imageWidth,
+		imageHeight);
+	// Creando la textura con id 1
+	glGenTextures(1, &textureParticleFountainID);
+	// Enlazar esa textura a una tipo de textura de 2D.
+	glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Verifica si se pudo abrir la textura
+	if (data) {
+		// Transferis los datos de la imagen a memoria
+		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
+		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
+		// a los datos
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
+		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
 		std::cout << "Failed to load texture" << std::endl;
+
 	// Libera la memoria de la textura
-	textureTerrainBlendMap.freeImage(bitmap); 
+	textureParticulaAgua.freeImage(bitmap);
+	//Inicializacion de la funcion para las particulas
+	inicializacionParticulasFountain();
 }
 
 	void destroy() {
@@ -487,6 +608,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelLamp1.destroy();
 		modelLamp2.destroy();
 		modelLampPost2.destroy();
+		modelFountain.destroy();
 
 		// Custom objects animate
 		/*Finn*/
@@ -502,10 +624,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		glDeleteTextures(1, &textureTerrainGID);
 		glDeleteTextures(1, &textureTerrainBID);
 		glDeleteTextures(1, &textureTerrainBlendMapID);
+		glDeleteTextures(1, &textureParticleFountainID);
 
 		// Cube Maps Delete
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		glDeleteTextures(1, &skyboxTextureID);
+
+		//Elimina el buffer de la fuente de agua(Particulas)
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glDeleteBuffers(1, &initVel);
+		glDeleteBuffers(1, &startTime);
+		glBindVertexArray(0);
+		glDeleteVertexArrays(1, &VAOParticulas);
 	}
 
 	void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes) {
@@ -716,6 +846,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(3.0f, 3.0f, 0.0f));
 		modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
 
+		modelMatrixFountain = glm::translate(modelMatrixFountain, glm::vec3(5.0, 0.0, -40.0));
+		modelMatrixFountain[3][1] = terrain.getHeightTerrain(modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
+		modelMatrixFountain = glm::scale(modelMatrixFountain, glm::vec3(10.0f, 10.0f, 10.0f));
+
 		while (psi) {
 			currTime = TimeManager::Instance().GetTime();
 			if (currTime - lastTime < 0.016666667) {
@@ -784,6 +918,17 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				glm::value_ptr(projection));
 			shaderTerrain.setMatrix4("view", 1, false,
 				glm::value_ptr(view));
+
+			shaderParticulasFountain.setMatrix4("projection", 1, false, glm::value_ptr(projection));
+			shaderParticulasFountain.setMatrix4("view", 1, false, glm::value_ptr(view));
+
+			/*******************************************
+			* Propiedades de neblina
+			*******************************************/
+			shaderMulLighting.setVectorFloat3("fogColor", glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+			shaderTerrain.setVectorFloat3("fogColor", glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+			shaderSkybox.setVectorFloat3("fogColor", glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+
 
 			ambientLight = glm::vec3(0.5f, 0.5f, 0.5f);
 			diffuseLight = glm::vec3(0.3f, 0.3f, 0.3f); 
@@ -973,6 +1118,19 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				modelLampPost2.render();
 			}
 
+			/*Render modelo GRASS*/
+			glDisable(GL_CULL_FACE);
+			glm::vec3 grassPosition = glm::vec3(0.0f);
+			grassPosition.y = terrain.getHeightTerrain(grassPosition.x, grassPosition.z);
+			modelGrass.setPosition(grassPosition);
+			modelGrass.render();
+			glEnable(GL_CULL_FACE);
+
+			// Fountain
+			glDisable(GL_CULL_FACE);
+			modelFountain.render(modelMatrixFountain);
+			glEnable(GL_CULL_FACE);
+
 		  /*******************************************
 		  * Custom Anim objects obj
 		  *******************************************/
@@ -990,14 +1148,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelFinnAnim.setAnimationIndex(animationIndex);
 			modelFinnAnim.render(modelMatrixFinnBody);
 
-			/*Render modelo GRASS*/
-			glDisable(GL_CULL_FACE);
-			glm::vec3 grassPosition = glm::vec3(0.0f);
-			grassPosition.y = terrain.getHeightTerrain(grassPosition.x, grassPosition.z);
-			modelGrass.setPosition(grassPosition);
-			modelGrass.render();
-			glEnable(GL_CULL_FACE);
-
 		   /*******************************************
 		   * Skybox
 		   *******************************************/
@@ -1014,6 +1164,54 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			glCullFace(oldCullFaceMode);
 			glDepthFunc(oldDepthFuncMode);
 
+			/**********
+			 * Update the position with alpha objects
+			 */
+			//update the fountain
+			blendingUnsorted.find("particulasAgua")->second = glm::vec3(modelMatrixFountain[3]);
+
+			/**********
+			 * Sorter with alpha objects
+			 */
+			std::map<float, std::pair<std::string, glm::vec3>> blendingSorted;
+			std::map<std::string, glm::vec3>::iterator itblend;
+			for (itblend = blendingUnsorted.begin(); itblend != blendingUnsorted.end(); itblend++) {
+				float distanceFromView = glm::length(camera->getPosition() - itblend->second);
+				blendingSorted[distanceFromView] = std::make_pair(itblend->first, itblend->second);
+			}
+			/**********
+		 * Render de las transparencias
+		 */
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDisable(GL_CULL_FACE);
+			for (std::map<float, std::pair<std::string, glm::vec3> >::reverse_iterator it = blendingSorted.rbegin(); it != blendingSorted.rend(); it++) {
+				if (it->second.first.compare("particulasAgua") == 0) {
+					//Inicializacion del sistema de particulas
+					glm::mat4 modelMatrixParticulasFuente = glm::mat4(1.0f);
+					modelMatrixParticulasFuente = glm::translate(modelMatrixParticulasFuente, it->second.second);
+					modelMatrixParticulasFuente[3][1] += 3.7f;
+					modelMatrixParticulasFuente = glm::scale(modelMatrixParticulasFuente, glm::vec3(1.0f, 1.0f, 1.0f) * 2.0f);
+					currTimeParticulasFountain = TimeManager::Instance().GetTime();
+					if (currTimeParticulasFountain - lastTimeParticulasFountain > 17.0f)
+						lastTimeParticulasFountain = currTimeParticulasFountain;
+					glDepthMask(GL_FALSE);
+					glPointSize(10.0f);
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, textureParticleFountainID);
+					shaderParticulasFountain.turnOn();
+					shaderParticulasFountain.setFloat("Time", float(currTimeParticulasFountain - lastTimeParticulasFountain));
+					shaderParticulasFountain.setFloat("ParticleLifetime", 16.0f);
+					shaderParticulasFountain.setVectorFloat3("Gravity", glm::value_ptr(glm::vec3(0.0f, -0.1f, 0.0f)));
+					shaderParticulasFountain.setMatrix4("model", 1, false, glm::value_ptr(modelMatrixParticulasFuente));
+					shaderParticulasFountain.setInt("ParticleTex", 0);
+					glBindVertexArray(VAOParticulas);
+					glDrawArrays(GL_POINTS, 0, numParticulas);
+					glDepthMask(GL_TRUE);
+					shaderParticulasFountain.turnOff();
+				}
+			}
+			glEnable(GL_CULL_FACE);
 			/*******************************************
 			 * Creacion de colliders
 			 * IMPORTANT do this before interpolations
