@@ -1,0 +1,10 @@
+#escala
+1.0
+#ruta del modelo
+../models/...
+#angulo de rotacion inicial del modelo
+90.0
+#Componentes del vector de rotacion
+x
+y
+z

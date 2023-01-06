@@ -1,0 +1,21 @@
+#escala
+0.01
+#ruta del modelo
+../models/Finn/finn_9.fbx
+0.0
+0.0
+0.0
+0.0
+0.015
+0.0
+1.2
+0.1
+0.0
+-0.05
+0.0
+#Angulo de rotacion del collider
+-90.0
+#Vector de rotacion del collider
+1.0
+0.0
+0.0

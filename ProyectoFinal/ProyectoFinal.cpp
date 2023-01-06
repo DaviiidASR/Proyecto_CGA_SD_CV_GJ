@@ -47,6 +47,9 @@
 //Include e text rendering
 #include "Headers/FontTypeRendering.h"
 
+///
+#include "Player.h"
+
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
@@ -80,7 +83,9 @@ Sphere skyboxSphere(20, 20);
 Box boxCollider;
 Sphere sphereCollider(10, 10);
 // Models complex instances
-Model modelFinnAnim;
+Model modelPlayerAnim;
+Model modelEstadio;
+Player player;
 
 Model modelHeliChasis;
 Model modelHeliHeli;
@@ -93,7 +98,7 @@ Model modelLamp1;
 Model modelLamp2;
 Model modelLampPost2;
 
-Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap.png");
+Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap2.png");
 GLuint skyboxTextureID;
 
 FontTypeRendering::FontTypeRendering* textRender;
@@ -120,9 +125,10 @@ int lastMousePosX, offsetX = 0;
 int lastMousePosY, offsetY = 0;
 
 // Model matrix definitions
-glm::mat4 modelMatrixFinn = glm::mat4(1.0f);
+glm::mat4 modelMatrixPlayer = glm::mat4(1.0f);
 glm::mat4 modelMatrixHeli = glm::mat4(1.0f);
 glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
+glm::mat4 modelMatrixEstadio = glm::mat4(1.0f);
 
 int animationIndex = 0;
 int modelSelected = 0;
@@ -321,10 +327,14 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.setShader(&shaderTerrain);
 	terrain.setPosition(glm::vec3(100, 0, 100));
 
-	/*Finn*/
-	modelFinnAnim.loadModel("../models/Finn/finn_9.fbx");
-	modelFinnAnim.setShader(&shaderMulLighting);
-
+	/*Player*/
+	player.setModel("finn");
+	modelPlayerAnim.loadModel(player.getPath());
+	modelPlayerAnim.setShader(&shaderMulLighting);
+	/*Estatdio*/
+	modelEstadio.loadModel("../models/Estadio/estadioV1.obj");
+	modelEstadio.setShader(&shaderMulLighting);
+	
 	// Helicopter
 	modelHeliChasis.loadModel("../models/Helicopter/Mi_24_chasis.obj");
 	modelHeliChasis.setShader(&shaderMulLighting);
@@ -611,8 +621,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelFountain.destroy();
 
 		// Custom objects animate
-		/*Finn*/
-		modelFinnAnim.destroy();
+		/*Player*/
+		modelPlayerAnim.destroy();
+
+		modelEstadio.destroy();
 
 		/*Grass*/
 		modelGrass.destroy();
@@ -730,13 +742,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 			if (fabs(axes[1]) > 0.2f)
 			{
-				modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0, 0, axes[1] * 0.1f));
+				modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0, 0, axes[1] * 0.1f));
 				animationIndex = 0;
 			}
 
 			if (fabs(axes[0]) > 0.2f)
 			{
-				modelMatrixFinn = glm::rotate(modelMatrixFinn, glm::radians(-axes[0] * 0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
+				modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-axes[0] * 0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
 				animationIndex = 0;
 			}
 
@@ -794,30 +806,30 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
 			enableCountSelected = true;
 
-		/* Controles Finn*/
+		/* Controles Player*/
 		if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			modelMatrixFinn = glm::rotate(modelMatrixFinn, 0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
+			modelMatrixPlayer = glm::rotate(modelMatrixPlayer, 0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
 			animationIndex = 1;
-			//modelFinnAnim.setAnimationIndex(1);
+			//modelPlayerAnim.setAnimationIndex(1);
 		}
 		else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			modelMatrixFinn = glm::rotate(modelMatrixFinn, -0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
+			modelMatrixPlayer = glm::rotate(modelMatrixPlayer, -0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
 			animationIndex = 1;
-			//modelFinnAnim.setAnimationIndex(1);
+			//modelPlayerAnim.setAnimationIndex(1);
 		}
 		else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0.0f, 0.0f, 0.03f));
+			modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, 0.03f));
 			animationIndex = 1;
-			//modelFinnAnim.setAnimationIndex(1);
+			//modelPlayerAnim.setAnimationIndex(1);
 		}
 		else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(0.0f, 0.0f, -0.03f));
+			modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, -0.03f));
 			animationIndex = 1; 
-			//modelFinnAnim.setAnimationIndex(1);
+			//modelPlayerAnim.setAnimationIndex(1);
 		}
 
 		bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
@@ -827,7 +839,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			tmv = 0;
 			startTimeJump = currTime;
 			animationIndex = 4;
-			//modelFinnAnim.setAnimationIndex(4);
+			//modelPlayerAnim.setAnimationIndex(4);
 		}
 
 		glfwPollEvents();
@@ -843,7 +855,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		glm::vec3 axisTarget;
 		float angleTarget;
 
-		modelMatrixFinn = glm::translate(modelMatrixFinn, glm::vec3(3.0f, 3.0f, 0.0f));
+		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(3.0f, 3.0f, 0.0f));
+		modelMatrixEstadio = glm::translate(modelMatrixEstadio, glm::vec3(0.0f));
 		modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
 
 		modelMatrixFountain = glm::translate(modelMatrixFountain, glm::vec3(5.0, 0.0, -40.0));
@@ -870,9 +883,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 			if (modelSelected == 3)
 			{
-				axisTarget = glm::axis(glm::quat_cast(modelMatrixFinn));
-				angleTarget = glm::angle(glm::quat_cast(modelMatrixFinn));
-				target = glm::vec3(modelMatrixFinn[3]) + glm::vec3(0.0f, 0.5f, 0.0f);
+				axisTarget = glm::axis(glm::quat_cast(modelMatrixPlayer));
+				angleTarget = glm::angle(glm::quat_cast(modelMatrixPlayer));
+				target = glm::vec3(modelMatrixPlayer[3]) + glm::vec3(0.0f, 0.5f, 0.0f);
 			}
 
 			if (std::isnan(angleTarget))
@@ -888,7 +901,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 			if (cameraSwitch)
 			{
-				cameraFP->setPosition(glm::vec3(modelMatrixFinn[3]) + glm::vec3(0.0f, 3.0f, 0.0f));
+				cameraFP->setPosition(glm::vec3(modelMatrixPlayer[3]) + glm::vec3(0.0f, 3.0f, 0.0f));
 				view = cameraFP->getViewMatrix();
 			}
 			else
@@ -1131,22 +1144,27 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelFountain.render(modelMatrixFountain);
 			glEnable(GL_CULL_FACE);
 
+			glm::mat4 modelMatrixEstadioBody = glm::mat4(modelMatrixEstadio);
+			modelMatrixEstadioBody[3][1] = terrain.getHeightTerrain(modelMatrixEstadioBody[3][0], modelMatrixEstadioBody[3][2]);
+			modelMatrixEstadioBody = glm::scale(modelMatrixEstadioBody, glm::vec3(1.0f, 1.0f, 1.0f) * 6.5f);
+			//modelEstadio.render(modelMatrixEstadioBody);
+
 		  /*******************************************
 		  * Custom Anim objects obj
 		  *******************************************/
-			modelMatrixFinn[3][1] = -tmv * tmv * gravity + 3.0 * tmv + terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]);
+			modelMatrixPlayer[3][1] = -tmv * tmv * gravity + 3.0 * tmv + terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
 			tmv = currTime - startTimeJump;
-			if (modelMatrixFinn[3][1] < terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]))
+			if (modelMatrixPlayer[3][1] < terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]))
 			{
 				isJump = false;
-				modelMatrixFinn[3][1] = terrain.getHeightTerrain(modelMatrixFinn[3][0], modelMatrixFinn[3][2]);
+				modelMatrixPlayer[3][1] = terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
 				animationIndex = 1;
 			}
-			glm::mat4 modelMatrixFinnBody = glm::mat4(modelMatrixFinn);
-			modelMatrixFinnBody = glm::translate(modelMatrixFinnBody, glm::vec3(0.0f, 0.0f, 0.0f));
-			modelMatrixFinnBody = glm::scale(modelMatrixFinnBody, glm::vec3(1.0f, 1.0f, 1.0f) * 0.01f);
-			modelFinnAnim.setAnimationIndex(animationIndex);
-			modelFinnAnim.render(modelMatrixFinnBody);
+			glm::mat4 modelMatrixPlayerBody = glm::mat4(modelMatrixPlayer);
+			modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale()			);
+			modelPlayerAnim.setAnimationIndex(animationIndex);
+			modelPlayerAnim.render(modelMatrixPlayerBody);
+
 
 		   /*******************************************
 		   * Skybox
@@ -1180,8 +1198,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				blendingSorted[distanceFromView] = std::make_pair(itblend->first, itblend->second);
 			}
 			/**********
-		 * Render de las transparencias
-		 */
+			 * Render de las transparencias
+			 */
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_CULL_FACE);
@@ -1216,16 +1234,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			 * Creacion de colliders
 			 * IMPORTANT do this before interpolations
 			 *******************************************/
-			 //Finn
-			glm::mat4 modelMatrixColliderFinn = glm::mat4(modelMatrixFinn);
-			AbstractModel::OBB finnCollider;
-			modelMatrixColliderFinn = glm::rotate(modelMatrixColliderFinn, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			finnCollider.u = glm::quat_cast(modelMatrixColliderFinn);
-			modelMatrixColliderFinn = glm::scale(modelMatrixColliderFinn, glm::vec3(1.0f, 1.0f, 1.0f) * 0.04f);
-			modelMatrixColliderFinn = glm::translate(modelMatrixColliderFinn, modelFinnAnim.getObb().c);
-			finnCollider.c = glm::vec3(modelMatrixColliderFinn[3]);
-			finnCollider.e = modelFinnAnim.getObb().e * 0.04f;
-			addOrUpdateColliders(collidersOBB, "finn", finnCollider, modelMatrixFinn);
+			//Player
+			glm::mat4 modelMatrixColliderPlayer = glm::mat4(modelMatrixPlayer);
+			AbstractModel::OBB playerCollider;
+			
+			modelMatrixColliderPlayer = glm::rotate(modelMatrixColliderPlayer, 
+				glm::radians(player.getAngleRotCol()), player.getVectorRotCol());
+			playerCollider.u = glm::quat_cast(modelMatrixColliderPlayer);
+			modelMatrixColliderPlayer = glm::scale(modelMatrixColliderPlayer, glm::vec3(1.0f) * player.getScaleCol());			
+			modelMatrixColliderPlayer = glm::translate(modelMatrixColliderPlayer, modelPlayerAnim.getObb().c );
+			playerCollider.c = glm::vec3(modelMatrixColliderPlayer[3]) + player.getOffsetC();
+			playerCollider.e = (modelPlayerAnim.getObb().e + player.getOffsetE()) * player.getScaleCol();
+			addOrUpdateColliders(collidersOBB, "player", playerCollider, modelMatrixPlayer);
 
 			// Lamps1 colliders
 			for (int i = 0; i < lamp1Position.size(); i++) {
@@ -1350,7 +1370,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				matrixCollider = glm::translate(matrixCollider, std::get<0>(it->second).c);
 				matrixCollider = matrixCollider * glm::mat4(std::get<0>(it->second).u);
 				matrixCollider = glm::scale(matrixCollider, std::get<0>(it->second).e * 2.0f);
-				boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
+				boxCollider.setColor(glm::vec4(0.0, 1.0, 0.0, 1.0));
 				boxCollider.enableWireMode();
 				boxCollider.render(matrixCollider);
 			}
