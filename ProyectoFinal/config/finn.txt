@@ -2,16 +2,21 @@
 0.01
 #ruta del modelo
 ../models/Finn/finn_9.fbx
+#angulo de rotacion inicial del modelo
+0.0
+#Componentes del vector de rotacion
 0.0
 0.0
 0.0
-0.0
+#Escala del collider
 0.015
+#Offset del centro del collider
 0.0
-1.2
+1.1
 0.1
-0.0
--0.05
+#Offset del la media
+5.0
+-0.1
 0.0
 #Angulo de rotacion del collider
 -90.0

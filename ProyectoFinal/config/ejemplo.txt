@@ -8,3 +8,19 @@
 x
 y
 z
+#Escala del collider
+1.0
+#Offset del centro del collider
+x
+y
+z
+#Offset del la media
+x
+y
+z
+#Angulo de rotacion del collider
+90.0
+#Vector de rotacion del collider
+x
+y
+z

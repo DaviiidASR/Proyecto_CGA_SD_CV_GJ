@@ -1,6 +1,26 @@
-0.01
+#escala
+0.012
+#ruta del modelo
 ../models/Jake/jake_05.fbx
--90.0
+#angulo de rotacion inicial del modelo
+0.0
+#Componentes del vector de rotacion
+1.0
+0.0
+0.0
+#Escala del collider
+0.0
+#Offset del centro del collider
+0.0
+0.75
+0.0
+#Offset del la media
+-0.45
+0.4
+0.1
+#Angulo de rotacion del collider
+0.0
+#Vector de rotacion del collider
 1.0
 0.0
 0.0

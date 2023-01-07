@@ -86,6 +86,7 @@ Sphere sphereCollider(10, 10);
 Model modelPlayerAnim;
 Model modelEstadio;
 Player player;
+Box prototipoPlayer;
 
 Model modelHeliChasis;
 Model modelHeliHeli;
@@ -298,12 +299,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	// Inicialización de los shaders
 	shader.initialize("../Shaders/colorShader.vs", "../Shaders/colorShader.fs");
-	/*shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
+	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation.vs", "../Shaders/multipleLights.fs");
-	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");*/
-	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
+	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");
+/*	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_fog.vs", "../Shaders/multipleLights_fog.fs");
-	shaderTerrain.initialize("../Shaders/terrain_fog.vs", "../Shaders/terrain_fog.fs");
+	shaderTerrain.initialize("../Shaders/terrain_fog.vs", "../Shaders/terrain_fog.fs")*/;
 	shaderParticulasFountain.initialize("../Shaders/particlesFountain.vs", "../Shaders/particlesFountain.fs");
 
 	// Inicializacion de los objetos.
@@ -331,6 +332,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	player.setModel("finn");
 	modelPlayerAnim.loadModel(player.getPath());
 	modelPlayerAnim.setShader(&shaderMulLighting);
+	//Prototipo
+	prototipoPlayer.init();
+	prototipoPlayer.setShader(&shader);
+	prototipoPlayer.setColor(glm::vec4(1.0, 0.0, 0.0, 1.0));
+
 	/*Estatdio*/
 	modelEstadio.loadModel("../models/Estadio/estadioV1.obj");
 	modelEstadio.setShader(&shaderMulLighting);
@@ -623,6 +629,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Custom objects animate
 		/*Player*/
 		modelPlayerAnim.destroy();
+		prototipoPlayer.destroy();
 
 		modelEstadio.destroy();
 
@@ -944,8 +951,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 
 			ambientLight = glm::vec3(0.5f, 0.5f, 0.5f);
-			diffuseLight = glm::vec3(0.3f, 0.3f, 0.3f); 
-			specularLight = glm::vec3(0.4f, 0.4f, 0.4f); 
+			diffuseLight = glm::vec3(0.3f, 0.3f, 0.3f);
+			specularLight = glm::vec3(0.4f, 0.4f, 0.4f);
 			directionLight = glm::vec3(-1.0f, 0.0f, 0.0f);
 			/*******************************************
 			 * Propiedades Luz direccional
@@ -1161,14 +1168,21 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				animationIndex = 1;
 			}
 			glm::mat4 modelMatrixPlayerBody = glm::mat4(modelMatrixPlayer);
-			modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale()			);
+			modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale());
 			modelPlayerAnim.setAnimationIndex(animationIndex);
 			modelPlayerAnim.render(modelMatrixPlayerBody);
 
+			//Prototipo
+			glm::mat4 matrixPrototipo = glm::mat4(1.0f);
+			matrixPrototipo[3][1] = terrain.getHeightTerrain(matrixPrototipo[3][0], matrixPrototipo[3][2]);
+			matrixPrototipo = glm::translate(matrixPrototipo, glm::vec3(1.8f, 0.5f, 0.0f));
+			matrixPrototipo = glm::scale(matrixPrototipo, glm::vec3(1.0f, 3.0f, 1.0f));
+			//prototipoPlayer.enableWireMode();
+			prototipoPlayer.render(matrixPrototipo);
 
-		   /*******************************************
-		   * Skybox
-		   *******************************************/
+			/*******************************************
+			* Skybox
+			*******************************************/
 			GLint oldCullFaceMode;
 			GLint oldDepthFuncMode;
 			// deshabilita el modo del recorte de caras ocultas para ver las esfera desde adentro
@@ -1185,7 +1199,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/**********
 			 * Update the position with alpha objects
 			 */
-			//update the fountain
+			 //update the fountain
 			blendingUnsorted.find("particulasAgua")->second = glm::vec3(modelMatrixFountain[3]);
 
 			/**********
@@ -1234,17 +1248,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			 * Creacion de colliders
 			 * IMPORTANT do this before interpolations
 			 *******************************************/
-			//Player
+			 //Player
 			glm::mat4 modelMatrixColliderPlayer = glm::mat4(modelMatrixPlayer);
 			AbstractModel::OBB playerCollider;
-			
-			modelMatrixColliderPlayer = glm::rotate(modelMatrixColliderPlayer, 
+
+			modelMatrixColliderPlayer = glm::rotate(modelMatrixColliderPlayer,
 				glm::radians(player.getAngleRotCol()), player.getVectorRotCol());
 			playerCollider.u = glm::quat_cast(modelMatrixColliderPlayer);
-			modelMatrixColliderPlayer = glm::scale(modelMatrixColliderPlayer, glm::vec3(1.0f) * player.getScaleCol());			
-			modelMatrixColliderPlayer = glm::translate(modelMatrixColliderPlayer, modelPlayerAnim.getObb().c );
+			modelMatrixColliderPlayer = glm::scale(modelMatrixColliderPlayer, glm::vec3(1.0f, 1.0f, 1.0f) * player.getScaleCol());
+			modelMatrixColliderPlayer = glm::translate(modelMatrixColliderPlayer, modelPlayerAnim.getObb().c);
 			playerCollider.c = glm::vec3(modelMatrixColliderPlayer[3]) + player.getOffsetC();
-			playerCollider.e = (modelPlayerAnim.getObb().e + player.getOffsetE()) * player.getScaleCol();
+			playerCollider.e = (modelPlayerAnim.getObb().e + player.getOffsetE()) * 
+				((player.getScaleCol() == 0.0f) ? 1.0f : player.getScaleCol());
 			addOrUpdateColliders(collidersOBB, "player", playerCollider, modelMatrixPlayer);
 
 			// Lamps1 colliders
