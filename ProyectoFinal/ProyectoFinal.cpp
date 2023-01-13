@@ -76,7 +76,6 @@ std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromPlayer = 7.0f;
 bool cameraSwitch = false;
 bool cameraState = false;
-//std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
 
 Sphere skyboxSphere(20, 20);
 //Box boxCesped;
@@ -132,7 +131,7 @@ glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 glm::mat4 modelMatrixEstadio = glm::mat4(1.0f);
 
 int animationIndex = 0;
-int modelSelected = 0;
+int modelSelected = 3;
 
 // Lamps positions
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), 
@@ -302,9 +301,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation.vs", "../Shaders/multipleLights.fs");
 	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");
-/*	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
-	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_fog.vs", "../Shaders/multipleLights_fog.fs");
-	shaderTerrain.initialize("../Shaders/terrain_fog.vs", "../Shaders/terrain_fog.fs")*/;
+	//shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
+	//shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_fog.vs", "../Shaders/multipleLights_fog.fs");
+	//shaderTerrain.initialize("../Shaders/terrain_fog.vs", "../Shaders/terrain_fog.fs");
 	shaderParticulasFountain.initialize("../Shaders/particlesFountain.vs", "../Shaders/particlesFountain.fs");
 
 	// Inicializacion de los objetos.
@@ -338,7 +337,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	prototipoPlayer.setColor(glm::vec4(1.0, 0.0, 0.0, 1.0));
 
 	/*Estatdio*/
-	modelEstadio.loadModel("../models/Estadio/estadioV1.obj");
+	modelEstadio.loadModel("../models/Estadio/estadioV2.obj");
 	modelEstadio.setShader(&shaderMulLighting);
 	
 	// Helicopter
@@ -361,8 +360,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Fountain
 	modelFountain.loadModel("../models/fountain/fountain.obj");
 	modelFountain.setShader(&shaderMulLighting);
-
-	//camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 
 	textRender = new FontTypeRendering::FontTypeRendering(screenWidth, screenHeight);
 	textRender->Initialize();
@@ -496,7 +493,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureTerrainG.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar
-	Texture textureTerrainB("../Textures/path.png");
+	Texture textureTerrainB("../Textures/GroundDirtForest.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	bitmap = textureTerrainB.loadImage();
 	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
@@ -892,7 +889,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			{
 				axisTarget = glm::axis(glm::quat_cast(modelMatrixPlayer));
 				angleTarget = glm::angle(glm::quat_cast(modelMatrixPlayer));
-				target = glm::vec3(modelMatrixPlayer[3]) + glm::vec3(0.0f, 0.5f, 0.0f);
+				target = glm::vec3(modelMatrixPlayer[3]) + glm::vec3(0.0f, 2.5f, -5.0f);
 			}
 
 			if (std::isnan(angleTarget))
@@ -1085,7 +1082,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
 			// Se activa la textura del background
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainBackgroundID);
+			glBindTexture(GL_TEXTURE_2D, textureCespedID);
 			shaderTerrain.setInt("backgroundTexture", 0);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, textureTerrainBID);
@@ -1154,7 +1151,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			glm::mat4 modelMatrixEstadioBody = glm::mat4(modelMatrixEstadio);
 			modelMatrixEstadioBody[3][1] = terrain.getHeightTerrain(modelMatrixEstadioBody[3][0], modelMatrixEstadioBody[3][2]);
 			modelMatrixEstadioBody = glm::scale(modelMatrixEstadioBody, glm::vec3(1.0f, 1.0f, 1.0f) * 6.5f);
-			//modelEstadio.render(modelMatrixEstadioBody);
+			modelEstadio.render(modelMatrixEstadioBody);
 
 		  /*******************************************
 		  * Custom Anim objects obj
@@ -1402,7 +1399,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		
 		//UI
 		glEnable(GL_BLEND);
-		textRender->render("Hola mundo", 0, 0, 18, 1.0, 0.45, 0.9);
+		textRender->render("Hola mundo", 0, 0, 80, 1.0, 0.45, 0.9);
 		glDisable(GL_BLEND);
 
 		glfwSwapBuffers(window);
@@ -1412,7 +1409,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 }
 int main(int argc, char** argv)
 {
-	init(800, 700, "Window GLFW", false);
+	init(1366, 820, "Window GLFW", false);
 	applicationLoop();
 	destroy();
 	return 1;
