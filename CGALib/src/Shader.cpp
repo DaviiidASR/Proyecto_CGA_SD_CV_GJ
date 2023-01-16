@@ -53,6 +53,7 @@ void Shader::initialize(std::string strVertexFile,
 		std::vector<GLchar> errorLog(maxLength);
 		glGetShaderInfoLog(VertexShaderId, maxLength, &maxLength, &errorLog[0]);
 		printf("%s\n", &errorLog[0]);
+		printf("%s\n", strVertexFile);
 
 		glDeleteShader(VertexShaderId);
 		return exit(-1);
@@ -67,6 +68,7 @@ void Shader::initialize(std::string strVertexFile,
 		glGetShaderInfoLog(FragmentShaderId, maxLength, &maxLength,
 				&errorLog[0]);
 		printf("%s\n", &errorLog[0]);
+		printf("%s\n", strFragmentFile);
 
 		glDeleteShader(FragmentShaderId);
 		return exit(-1);
