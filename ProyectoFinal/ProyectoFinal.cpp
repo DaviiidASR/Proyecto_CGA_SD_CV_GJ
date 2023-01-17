@@ -82,6 +82,10 @@ Sphere sphereCollider(10, 10);
 Model modelPlayerAnim;
 Model modelEstadio;
 Player player;
+int step = 2;
+float stepVel = 0.1f;
+bool isRight = false;
+bool isPress = false;
 Box pista;
 Box pista2;
 Box pista3;
@@ -866,23 +870,34 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/* Controles Player*/
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			modelMatrixPlayer = glm::rotate(modelMatrixPlayer, 0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
-			animationIndex = 1;
+			
+			if (step == 3 && !isPress)
+				step = 2;
+			else if ((step == 1 || step == 2) && !isPress)
+				step = 1;
+			std::cout << "Step: " << step << std::endl;
+			isRight = false;
+			isPress = true;
 		}
 		else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			modelMatrixPlayer = glm::rotate(modelMatrixPlayer, -0.02f, glm::vec3(0.0f, 1.0f, 0.0f));
-			animationIndex = 1;
+			if ((step == 3 || step == 2) && !isPress)
+				step = 3;
+			else if (step == 1 && !isPress)
+				step = 2;
+			std::cout << "Step: " << step << std::endl;
+			isRight = true;
+			isPress = true;
 		}
 		else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, 0.03f));
-			animationIndex = 1;
+			//modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, 0.03f));
+			//animationIndex = 1;
 		}
 		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, -0.03f));
-			animationIndex = 1; 
+			//modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, -0.03f));
+			//animationIndex = 1; 
 		}
 		//Salto
 		bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
@@ -1306,7 +1321,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			pista3.render(matrixPista3);
 			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 			glBindTexture(GL_TEXTURE_2D, 0);
-			std::cout << pista.getPosition().z << "," << pista2.getPosition().z << "," << pista3.getPosition().z << std::endl;
+
+			//std::cout << pista.getPosition().z << "," << pista2.getPosition().z << "," << pista3.getPosition().z << std::endl;
 
 			//Curva
 			//glm::mat4 modelMatrixCurvaBody = modelMatrixCurva;
@@ -1567,6 +1583,60 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		textRender->render("Hola mundo", 0, 0, 80, 1.0, 0.45, 0.9);
 		glDisable(GL_BLEND);
 
+		/*********************
+		* Maquinas de estado *
+		**********************/
+
+		switch(step) {
+			case 1:
+				if (!isRight && modelMatrixPlayer[3][2] >= -2.0)
+				{
+					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] - stepVel;
+					
+				}
+				if (modelMatrixPlayer[3][2] < -2.0 && isPress)
+				{
+					modelMatrixPlayer[3][2] = -2;
+					std::cout << "end pressing" << std::endl;
+					isPress = false;
+				}
+				break;
+			case 2:
+				if (isRight && modelMatrixPlayer[3][2] <= 0)
+				{
+					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] + stepVel;
+				}
+				if (isRight && modelMatrixPlayer[3][2] > 0 && isPress)
+				{
+					std::cout << "end pressing 2" << std::endl;
+					isPress = false;
+				}
+				if (!isRight && modelMatrixPlayer[3][2] > 0) {
+					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] - stepVel;
+				}
+				if (!isRight && modelMatrixPlayer[3][2] < 0 && isPress)
+				{
+					std::cout << "end pressing 2" << std::endl;
+					isPress = false;
+				}
+				
+				break;
+				
+			case 3:
+				if (isRight && modelMatrixPlayer[3][2] <= 2)
+				{
+					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] + stepVel;
+				}
+				if (isRight && modelMatrixPlayer[3][2] > 2 && isPress)
+				{
+					isPress = false;
+				}
+				break;
+		}
 		glfwSwapBuffers(window);
 
 
