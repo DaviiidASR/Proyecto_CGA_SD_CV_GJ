@@ -84,6 +84,7 @@
     <None Include="..\Shaders\terrain_fog.vs" />
     <None Include="..\Shaders\terrain_shadow.fs" />
     <None Include="..\Shaders\terrain_shadow.vs" />
+    <None Include="..\Shaders\texturizado.fs" />
     <None Include="..\Shaders\texturizado.vs" />
     <None Include="..\Shaders\texturizado_depth_view.fs" />
   </ItemGroup>

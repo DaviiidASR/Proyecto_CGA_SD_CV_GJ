@@ -208,5 +208,8 @@
     <None Include="..\Shaders\texturizado_depth_view.fs">
       <Filter>Archivos de recursos</Filter>
     </None>
+    <None Include="..\Shaders\texturizado.fs">
+      <Filter>Archivos de recursos</Filter>
+    </None>
   </ItemGroup>
 </Project>
