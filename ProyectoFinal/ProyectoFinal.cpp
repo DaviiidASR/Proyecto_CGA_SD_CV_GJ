@@ -8,6 +8,7 @@
 //std includes
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 //glfw include
 #include <GLFW/glfw3.h>
@@ -81,11 +82,33 @@ Sphere sphereCollider(10, 10);
 // Models complex instances
 Model modelPlayerAnim;
 Model modelEstadio;
+
 Player player;
+//Obstaculos
+std::map<std::string, std::tuple<glm::mat4, bool, Model*>> obstaculos;
+Model modelObstaculo1;
+Model modelObstaculo2;
+Model modelObstaculo3;
+Model modelObstaculo4;
+Model modelObstaculo5;
+Model modelObstaculo6;
+Model modelObstaculo7;
+Model modelObstaculo8;
+
+//Variables obstaculos
+float offsetVelObs = 5.0f;
+float intervaloObstaculos = 10.0f;
+int sizeObstaculos = 0;
+std::vector<std::string> namesObs;
+
+
+//Variables de control para el movimiento de la pista
 int step = 2;
 float stepVel = 0.1f;
 bool isRight = false;
 bool isPress = false;
+
+//pista
 Box pista;
 Box pista2;
 Box pista3;
@@ -134,6 +157,7 @@ glm::mat4 modelMatrixPlayer = glm::mat4(1.0f);
 glm::mat4 modelMatrixHeli = glm::mat4(1.0f);
 glm::mat4 modelMatrixFountain = glm::mat4(1.0f);
 glm::mat4 modelMatrixEstadio = glm::mat4(1.0f);
+
 glm::mat4 modelMatrixCurva = glm::mat4(1.0f);
 glm::mat4 modelMatrixPista = glm::mat4(1.0f);
 
@@ -190,7 +214,37 @@ void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroy();
 bool processInput(bool continueApplication = true);
 void inicializacionParticulasFountain();
+int getObstaclePosition();
+void processObstacles(std::string name);
 
+void processObstacles(std::string name) {
+	
+	glm::mat4 modelMatrixObstaculo = std::get<0>(obstaculos.find(name)->second);
+
+	if (std::get<1>(obstaculos.find(name)->second))
+	{	
+		modelMatrixObstaculo = glm::translate(modelMatrixObstaculo, glm::vec3(0.0f, 0.0f, -deltaTime * velocity * offsetVelObs));
+		modelMatrixObstaculo[3][1] = terrain.getHeightTerrain(modelMatrixObstaculo[3][0], modelMatrixObstaculo[3][2]);
+	}
+	
+	if (modelMatrixObstaculo[3][0] < -1.0f)
+	{
+		modelMatrixObstaculo = glm::translate(modelMatrixObstaculo, glm::vec3(getObstaclePosition(), 0.0f, 18.0f));
+		std::get<1>(obstaculos.find(name)->second) = false;
+	}
+	std::get<0>(obstaculos.find(name)->second) = modelMatrixObstaculo;
+}
+
+int getObstaclePosition() {
+	
+	int posObs1 = (rand() % 4) - 1;
+	if (posObs1 == 1)
+		posObs1 = 2;
+	else if (posObs1 == -1)
+		posObs1 = -2;
+	std::cout << posObs1 << std::endl;
+	return posObs1;
+}
 void inicializacionParticulasFountain() {
 	//generarBuffers
 	glGenBuffers(1, &initVel);
@@ -358,6 +412,24 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelEstadio.loadModel("../models/Estadio/estadioV2.obj");
 	modelEstadio.setShader(&shaderMulLighting);
 	
+	/*Obstaculos*/
+	modelObstaculo1.loadModel("../models/obstaculos/ballaAtletismo.obj");
+	modelObstaculo1.setShader(&shaderMulLighting);
+	modelObstaculo2.loadModel("../models/box/coinBlock1.obj");
+	modelObstaculo2.setShader(&shaderMulLighting);
+	modelObstaculo3.loadModel("../models/obstaculos/ballaAtletismo.obj");
+	modelObstaculo3.setShader(&shaderMulLighting);
+	modelObstaculo4.loadModel("../models/box/coinBlock1.obj");
+	modelObstaculo4.setShader(&shaderMulLighting);
+	modelObstaculo5.loadModel("../models/obstaculos/ballaAtletismo.obj");
+	modelObstaculo5.setShader(&shaderMulLighting);
+	modelObstaculo6.loadModel("../models/box/coinBlock1.obj");
+	modelObstaculo6.setShader(&shaderMulLighting);
+	modelObstaculo7.loadModel("../models/obstaculos/ballaAtletismo.obj");
+	modelObstaculo7.setShader(&shaderMulLighting);
+	modelObstaculo8.loadModel("../models/box/coinBlock1.obj");
+	modelObstaculo8.setShader(&shaderMulLighting);
+
 	// Helicopter
 	modelHeliChasis.loadModel("../models/Helicopter/Mi_24_chasis.obj");
 	modelHeliChasis.setShader(&shaderMulLighting);
@@ -707,6 +779,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelLampPost2.destroy();
 		modelFountain.destroy();
 
+		modelEstadio.destroy();
+		modelObstaculo1.destroy();
+		modelObstaculo2.destroy();
+		modelObstaculo3.destroy();
+		modelObstaculo4.destroy();
+		modelObstaculo5.destroy();
+		modelObstaculo6.destroy();
+		modelObstaculo7.destroy();
+		modelObstaculo8.destroy();
 		// Custom objects animate
 		/*Player*/
 		modelPlayerAnim.destroy();
@@ -715,7 +796,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		pista3.destroy();
 		curva.destroy();
 
-		modelEstadio.destroy();
 
 		/*Grass*/
 		modelGrass.destroy();
@@ -921,14 +1001,73 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::vec3 axisTarget;
 		float angleTarget;
-
+		float timeInt = -intervaloObstaculos;
+		int contObs = 0;
+	
 		
 		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 3.0f, 0.0f));
 		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrixEstadio = glm::translate(modelMatrixEstadio, glm::vec3(0.0f));
+		
 		modelMatrixCurva = glm::rotate(modelMatrixCurva, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrixCurva = glm::translate(modelMatrixCurva, glm::vec3(0.0f, 0.0f, 12.0f));
 		
+		namesObs.push_back("uno");
+		obstaculos["uno"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo1);
+		std::get<0>(obstaculos.find("uno")->second) = glm::translate(
+			std::get<0>(obstaculos.find("uno")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("uno")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("uno")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("dos");
+		obstaculos["dos"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo2);
+		std::get<0>(obstaculos.find("dos")->second) = glm::translate(
+			std::get<0>(obstaculos.find("dos")->second), glm::vec3(18.0f, 0.5f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("dos")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("dos")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("tres");
+		obstaculos["tres"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo3);
+		std::get<0>(obstaculos.find("tres")->second) = glm::translate(
+			std::get<0>(obstaculos.find("tres")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("tres")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("tres")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("cuatro");
+		obstaculos["cuatro"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo4);
+		std::get<0>(obstaculos.find("cuatro")->second) = glm::translate(
+			std::get<0>(obstaculos.find("cuatro")->second), glm::vec3(18.0f, 0.5f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("cuatro")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("cuatro")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("cinco");
+		obstaculos["cinco"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo5);
+		std::get<0>(obstaculos.find("cinco")->second) = glm::translate(
+			std::get<0>(obstaculos.find("cinco")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("cinco")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("cinco")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("seis");
+		obstaculos["seis"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo6);
+		std::get<0>(obstaculos.find("seis")->second) = glm::translate(
+			std::get<0>(obstaculos.find("seis")->second), glm::vec3(18.0f, 0.5f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("seis")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("seis")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("siete");
+		obstaculos["siete"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo7);
+		std::get<0>(obstaculos.find("siete")->second) = glm::translate(
+			std::get<0>(obstaculos.find("siete")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("siete")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("siete")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("ocho");
+		obstaculos["ocho"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo8);
+		std::get<0>(obstaculos.find("ocho")->second) = glm::translate(
+			std::get<0>(obstaculos.find("ocho")->second), glm::vec3(18.0f, 0.5f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("ocho")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("ocho")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 		modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
 		modelMatrixFountain = glm::translate(modelMatrixFountain, glm::vec3(5.0, 0.0, -40.0));
 		modelMatrixFountain[3][1] = terrain.getHeightTerrain(modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
@@ -949,15 +1088,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			std::map<std::string, bool> collisionDetection;
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-			 //Manejo de la camara
+
+			//Manejo de la camara
 			glm::mat4 projection = glm::perspective(glm::radians(45.0f),
 				(float)screenWidth / (float)screenHeight, 0.01f, 100.0f);
 			glm::mat4 view = camera->getViewMatrix();
 			axisTarget = glm::axis(glm::quat_cast(modelMatrixPlayer));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixPlayer));
 			target = glm::vec3(modelMatrixPlayer[3]) + glm::vec3(-2.0f, 2.5f, 0.0f);
-			
+
 
 			if (std::isnan(angleTarget))
 			{
@@ -973,7 +1112,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			camera->setAngleTarget(angleTarget);
 			camera->updateCamera();
 			view = camera->getViewMatrix();
-			
+
 
 			// Settea la matriz de vista y projection al shader con solo color
 			shader.setMatrix4("projection", 1, false, glm::value_ptr(projection));
@@ -1013,7 +1152,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/*******************************************
 			 * Propiedades Luz direccional
 			 *******************************************/
-			
+
 			shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
 			shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(ambientLight));
 			shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(diffuseLight));
@@ -1121,10 +1260,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/*******************************************
 			 * Terrain Cesped
 			 *******************************************/
-			//glm::mat4 modelCesped = glm::mat4(1.0);
-			//modelCesped = glm::translate(modelCesped, glm::vec3(0.0, 0.0, 0.0));
-			//modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
-			// Se activa la textura del background
+			 //glm::mat4 modelCesped = glm::mat4(1.0);
+			 //modelCesped = glm::translate(modelCesped, glm::vec3(0.0, 0.0, 0.0));
+			 //modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
+			 // Se activa la textura del background
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureCespedID);
 			shaderTerrain.setInt("backgroundTexture", 0);
@@ -1198,6 +1337,27 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelMatrixEstadioBody = glm::scale(modelMatrixEstadioBody, glm::vec3(1.0f, 1.0f, 1.0f) * 2.0f);
 			modelEstadio.render(modelMatrixEstadioBody);
 
+			/*******************
+			* Obstaculos       *
+			 ******************/
+			if (TimeManager::Instance().GetRunningTime() - timeInt > intervaloObstaculos && 
+				contObs<obstaculos.size())
+			{
+				std::get<1>(obstaculos.find(namesObs.at(contObs))->second) = true;
+				contObs++; 
+				timeInt = TimeManager::Instance().GetRunningTime();
+			}
+
+			for (std::map<std::string, std::tuple<glm::mat4, bool, Model*>>::iterator it = obstaculos.begin();
+				it != obstaculos.end(); it++)
+			{
+				if (std::get<1>(it->second))
+				{
+					processObstacles(it->first);
+					std::get<2>(it->second)->render(std::get<0>(it->second));
+				}
+			}
+
 		  /*******************************************
 		  * Custom Anim objects obj
 		  *******************************************/
@@ -1219,7 +1379,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			matrixPista[3][1] = terrain.getHeightTerrain(matrixPista[3][0], matrixPista[3][2]);
 			matrixPista = glm::rotate(matrixPista, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			matrixPista = glm::scale(matrixPista, glm::vec3(12.0f, 0.1f, 12.0f));
-			
+
 			// Se activa la textura del background
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureCespedID);
@@ -1422,6 +1582,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				}
 			}
 			glEnable(GL_CULL_FACE);
+
 			/*******************************************
 			 * Creacion de colliders
 			 * IMPORTANT do this before interpolations
@@ -1436,38 +1597,55 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelMatrixColliderPlayer = glm::scale(modelMatrixColliderPlayer, glm::vec3(1.0f, 1.0f, 1.0f) * player.getScaleCol());
 			modelMatrixColliderPlayer = glm::translate(modelMatrixColliderPlayer, modelPlayerAnim.getObb().c);
 			playerCollider.c = glm::vec3(modelMatrixColliderPlayer[3]) + player.getOffsetC();
-			playerCollider.e = (modelPlayerAnim.getObb().e + player.getOffsetE()) * 
+			playerCollider.e = (modelPlayerAnim.getObb().e + player.getOffsetE()) *
 				((player.getScaleCol() == 0.0f) ? 1.0f : player.getScaleCol());
 			addOrUpdateColliders(collidersOBB, "player", playerCollider, modelMatrixPlayer);
 
-			// Lamps1 colliders
-			for (int i = 0; i < lamp1Position.size(); i++) {
-				AbstractModel::OBB lampCollider;
-				glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
-				modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp1Position[i]);
-				modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp, glm::radians(lamp1Orientation[i]),
-					glm::vec3(0, 1, 0));
-				// Set the orientation of collider before doing the scale
-				lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
-				modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(0.5, 0.5, 0.5));
-				modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, modelLamp1.getObb().c);
-				lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-				lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
-				addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i), lampCollider, modelMatrixColliderLamp);
-			}
-			for (int i = 0; i < lamp2Position.size(); i++)
+			/*************
+			* Obstaculos *
+			**************/
+			int l = 0;
+			for (std::map<std::string, std::tuple<glm::mat4, bool, Model*>>::iterator it = obstaculos.begin();
+				it != obstaculos.end(); it++)
 			{
-				AbstractModel::OBB lamp2Collider;
-				glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0f);
-				modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp2Position[i]);
-				modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0.0f, 1.0f, 0.0f));
-				lamp2Collider.u = glm::quat_cast(modelMatrixColliderLamp);
-				modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(1.0f, 1.0f, 1.0f));
-				modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, modelLampPost2.getObb().c);
-				lamp2Collider.c = glm::vec3(modelMatrixColliderLamp[3]);
-				lamp2Collider.e = modelLampPost2.getObb().e * 1.0f;
-				addOrUpdateColliders(collidersOBB, "Lamp2-" + std::to_string(i), lamp2Collider, modelMatrixColliderLamp);
+				AbstractModel::OBB obstacleCollider;
+				glm::mat4 modelMatrixObsCollider = glm::mat4(1.0f);
+				modelMatrixObsCollider = std::get<0>(it->second);
+				obstacleCollider.u = glm::quat_cast(modelMatrixObsCollider);
+				modelMatrixObsCollider = glm::translate(modelMatrixObsCollider, std::get<2>(it->second)->getObb().c);
+				obstacleCollider.c = glm::vec3(modelMatrixObsCollider[3]);
+				obstacleCollider.e = std::get<2>(it->second)->getObb().e;
+				addOrUpdateColliders(collidersOBB, "obstacle-" + std::to_string(l), obstacleCollider, modelMatrixObsCollider);
+				l++;
 			}
+			// Lamps1 colliders
+			//for (int i = 0; i < lamp1Position.size(); i++) {
+			//	AbstractModel::OBB lampCollider;
+			//	glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
+			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp1Position[i]);
+			//	modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp, glm::radians(lamp1Orientation[i]),
+			//		glm::vec3(0, 1, 0));
+			//	// Set the orientation of collider before doing the scale
+			//	lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
+			//	modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(0.5, 0.5, 0.5));
+			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, modelLamp1.getObb().c);
+			//	lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
+			//	lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
+			//	addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i), lampCollider, modelMatrixColliderLamp);
+			//}
+			//for (int i = 0; i < lamp2Position.size(); i++)
+			//{
+			//	AbstractModel::OBB lamp2Collider;
+			//	glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0f);
+			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp2Position[i]);
+			//	modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0.0f, 1.0f, 0.0f));
+			//	lamp2Collider.u = glm::quat_cast(modelMatrixColliderLamp);
+			//	modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(1.0f, 1.0f, 1.0f));
+			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, modelLampPost2.getObb().c);
+			//	lamp2Collider.c = glm::vec3(modelMatrixColliderLamp[3]);
+			//	lamp2Collider.e = modelLampPost2.getObb().e * 1.0f;
+			//	addOrUpdateColliders(collidersOBB, "Lamp2-" + std::to_string(i), lamp2Collider, modelMatrixColliderLamp);
+			//}
 
 			////Colision esfera vs esfera
 			//for (std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it = collidersSBB.begin();
@@ -1547,10 +1725,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 					}
 					else
 					{
-						//if (modeloBuscadoOBB->first.compare("mayow") == 0)
-						//{
-						//	modelMatrixMayow = std::get<1>(modeloBuscadoOBB->second);
-						//}
+						if (modeloBuscadoOBB->first.compare("player") == 0)
+						{
+							std::cout << "Hay colision con player" << std::endl;
+						}
 					}
 				}
 			}
@@ -1577,10 +1755,29 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			//	sphereCollider.enableWireMode();
 			//	sphereCollider.render(matrixCollider);
 			//}
-		
+
 		//UI
+		std::stringstream miliTxt;
+		std::stringstream segTxt;
+		std::stringstream minTxt;
+		float time = TimeManager::Instance().GetRunningTime();
+		int segundos = 0, minutos = 0, milisegundos = 0;
+		milisegundos = (int)(fmod(time, 1) * 100);
+		if (time >= 60)
+		{
+			minutos = (int)time / 60;
+			segundos = (int)(time - (minutos * 60));
+		}
+		else
+		{
+			segundos = (int)(time);
+		}
+		miliTxt << std::setw(2) << std::setfill('0') << milisegundos;
+		segTxt << std::setw(2) << std::setfill('0') << segundos;
+		minTxt << std::setw(2) << std::setfill('0') << minutos;
+		std::string s = minTxt.str() + ":" + segTxt.str() + ":" + miliTxt.str();
 		glEnable(GL_BLEND);
-		textRender->render("Hola mundo", 0, 0, 80, 1.0, 0.45, 0.9);
+		textRender->render(s, 0.6, 0.8, 60, 1.0, 0.9, 0.2);
 		glDisable(GL_BLEND);
 
 		/*********************
@@ -1591,35 +1788,35 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			case 1:
 				if (!isRight && modelMatrixPlayer[3][2] >= -2.0)
 				{
-					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					//std::cout << modelMatrixPlayer[3][2] << std::endl;
 					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] - stepVel;
 					
 				}
 				if (modelMatrixPlayer[3][2] < -2.0 && isPress)
 				{
 					modelMatrixPlayer[3][2] = -2;
-					std::cout << "end pressing" << std::endl;
+					//std::cout << "end pressing" << std::endl;
 					isPress = false;
 				}
 				break;
 			case 2:
 				if (isRight && modelMatrixPlayer[3][2] <= 0)
 				{
-					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					//std::cout << modelMatrixPlayer[3][2] << std::endl;
 					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] + stepVel;
 				}
 				if (isRight && modelMatrixPlayer[3][2] > 0 && isPress)
 				{
-					std::cout << "end pressing 2" << std::endl;
+					//std::cout << "end pressing 2" << std::endl;
 					isPress = false;
 				}
 				if (!isRight && modelMatrixPlayer[3][2] > 0) {
-					std::cout << modelMatrixPlayer[3][2] << std::endl;
+					//std::cout << modelMatrixPlayer[3][2] << std::endl;
 					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] - stepVel;
 				}
 				if (!isRight && modelMatrixPlayer[3][2] < 0 && isPress)
 				{
-					std::cout << "end pressing 2" << std::endl;
+					//std::cout << "end pressing 2" << std::endl;
 					isPress = false;
 				}
 				
@@ -1644,6 +1841,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 }
 int main(int argc, char** argv)
 {
+	srand(time(NULL));
 	init(1366, 820, "Window GLFW", false);
 	applicationLoop();
 	destroy();
