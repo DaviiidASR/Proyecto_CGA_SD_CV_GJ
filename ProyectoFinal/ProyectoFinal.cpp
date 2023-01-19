@@ -112,6 +112,8 @@ Model modelObstaculo5;
 Model modelObstaculo6;
 Model modelObstaculo7;
 Model modelObstaculo8;
+Model modelObstaculo9;
+Model modelObstaculo10;
 
 //Variables obstaculos
 float offsetVelObs = 5.0f;
@@ -302,10 +304,14 @@ void gameOver() {
 void processObstacles(std::string name) {
 	
 	glm::mat4 modelMatrixObstaculo = std::get<0>(obstaculos.find(name)->second);
-
+	int direccion = -1;
+	if (name == "nueve" || name == "diez")
+	{
+		direccion = 1;
+	}
 	if (std::get<1>(obstaculos.find(name)->second))
 	{	
-		modelMatrixObstaculo = glm::translate(modelMatrixObstaculo, glm::vec3(0.0f, 0.0f, -deltaTime * velocity * offsetVelObs));
+		modelMatrixObstaculo = glm::translate(modelMatrixObstaculo, glm::vec3(0.0f, 0.0f, deltaTime * velocity * offsetVelObs * direccion));
 		modelMatrixObstaculo[3][1] = terrain.getHeightTerrain(modelMatrixObstaculo[3][0], modelMatrixObstaculo[3][2]);
 	}
 	
@@ -313,6 +319,7 @@ void processObstacles(std::string name) {
 	{
 		modelMatrixObstaculo = glm::translate(modelMatrixObstaculo, glm::vec3(getObstaclePosition(), 0.0f, 18.0f));
 		std::get<1>(obstaculos.find(name)->second) = false;
+		contObs--;
 	}
 	std::get<0>(obstaculos.find(name)->second) = modelMatrixObstaculo;
 }
@@ -445,6 +452,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation.vs", "../Shaders/multipleLights.fs");
 	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");
+	//shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_shadow.vs", "../Shaders/multipleLights_shadow.fs");
+	//shaderTerrain.initialize("../Shaders/terrain_shadow.vs", "../Shaders/terrain_shadow.fs");
 	//shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox_fog.fs");
 	//shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation_fog.vs", "../Shaders/multipleLights_fog.fs");
 	//shaderTerrain.initialize("../Shaders/terrain_fog.vs", "../Shaders/terrain_fog.fs");
@@ -521,6 +530,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelObstaculo7.setShader(&shaderMulLighting);
 	modelObstaculo8.loadModel("../models/box/coinBlock1.obj");
 	modelObstaculo8.setShader(&shaderMulLighting);
+	modelObstaculo9.loadModel("../models/obstaculos/Lego22.obj");
+	modelObstaculo9.setShader(& shaderMulLighting);
+	modelObstaculo10.loadModel("../models/obstaculos/Lego22.obj");
+	modelObstaculo10.setShader(&shaderMulLighting);
 
 	// Helicopter
 	modelHeliChasis.loadModel("../models/Helicopter/Mi_24_chasis.obj");
@@ -971,7 +984,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureLegoSelect.freeImage(bitmap);
-
 	/*******************************************FIN TEXTURAS DE LA INTERFAZ MENU PRINCIPAL****************************************/
 
 	//Inicializacion de la funcion para las particulas
@@ -1117,6 +1129,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelObstaculo6.destroy();
 		modelObstaculo7.destroy();
 		modelObstaculo8.destroy();
+		modelObstaculo9.destroy();
+		modelObstaculo10.destroy();
+
 		// Custom objects animate
 		/*Player*/
 		modelPlayerAnim.destroy();
@@ -1388,22 +1403,24 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::vec3 axisTarget;
 		float angleTarget;
-		
+
 		float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f;
-		
+
 		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 3.0f, 0.0f));
 		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrixEstadio = glm::translate(modelMatrixEstadio, glm::vec3(0.0f));
-		
+
 		modelMatrixCurva = glm::rotate(modelMatrixCurva, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrixCurva = glm::translate(modelMatrixCurva, glm::vec3(0.0f, 0.0f, 12.0f));
-		
+
 		namesObs.push_back("uno");
 		obstaculos["uno"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo1);
 		std::get<0>(obstaculos.find("uno")->second) = glm::translate(
 			std::get<0>(obstaculos.find("uno")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
 		std::get<0>(obstaculos.find("uno")->second) = glm::rotate(
 			std::get<0>(obstaculos.find("uno")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		/*std::get<0>(obstaculos.find("uno")->second) = glm::scale(
+			std::get<0>(obstaculos.find("uno")->second), glm::vec3(1.0f) * 5.0f);*/
 
 		namesObs.push_back("dos");
 		obstaculos["dos"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo2);
@@ -1454,14 +1471,28 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::get<0>(obstaculos.find("ocho")->second) = glm::rotate(
 			std::get<0>(obstaculos.find("ocho")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-		modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
+		namesObs.push_back("nueve");
+		obstaculos["nueve"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo9);
+		std::get<0>(obstaculos.find("nueve")->second) = glm::translate(
+			std::get<0>(obstaculos.find("nueve")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("nueve")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("nueve")->second), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		namesObs.push_back("diez");
+		obstaculos["diez"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo9);
+		std::get<0>(obstaculos.find("diez")->second) = glm::translate(
+			std::get<0>(obstaculos.find("diez")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
+		std::get<0>(obstaculos.find("diez")->second) = glm::rotate(
+			std::get<0>(obstaculos.find("diez")->second), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+
 		modelMatrixFountain = glm::translate(modelMatrixFountain, glm::vec3(5.0, 0.0, -40.0));
 		modelMatrixFountain[3][1] = terrain.getHeightTerrain(modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
 		modelMatrixFountain = glm::scale(modelMatrixFountain, glm::vec3(10.0f, 10.0f, 10.0f));
 		
 		glm::vec3 lightPos = glm::vec3(10.0, 10.0, 0.0);
 		shadowBox = new ShadowBox(-lightPos, camera.get(), 15.0f, 0.0f, 45.0f);
-		texturaActivaID = textureCespedID;
+		texturaActivaID = texturaMenuID;
 
 		while (psi) {
 			currTime = TimeManager::Instance().GetTime();
@@ -1703,278 +1734,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			shaderTerrain.setInt("shadowMap", 10);
 			renderScene(true);
 			
-			/*******************************************
-			 * Terrain Cesped
-			 *******************************************/
-			 //glm::mat4 modelCesped = glm::mat4(1.0);
-			 //modelCesped = glm::translate(modelCesped, glm::vec3(0.0, 0.0, 0.0));
-			 //modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
-			 // Se activa la textura del background
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureCespedID);
-			shaderTerrain.setInt("backgroundTexture", 0);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainBID);
-			shaderTerrain.setInt("textureB", 2);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainRID);
-			shaderTerrain.setInt("textureR", 3);
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainGID);
-			glActiveTexture(GL_TEXTURE5);
-			shaderTerrain.setInt("textureG", 4);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainBlendMapID);
-			shaderTerrain.setInt("textureBlendMap", 5);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(40, 40)));
-			terrain.render();
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			/*******************************************
-			 * Custom objects obj
-			 *******************************************/
-
-			 // Helicopter
-			glm::mat4 modelMatrixHeliChasis = glm::mat4(modelMatrixHeli);
-			//modelHeliChasis.render(modelMatrixHeliChasis);
-
-			glm::mat4 modelMatrixHeliHeli = glm::mat4(modelMatrixHeliChasis);
-			//modelMatrixHeliHeli = glm::translate(modelMatrixHeliHeli, glm::vec3(0.0, 0.0, -0.249548));
-			//modelMatrixHeliHeli = glm::rotate(modelMatrixHeliHeli, rotHelHelY, glm::vec3(0, 1, 0));
-			//modelMatrixHeliHeli = glm::translate(modelMatrixHeliHeli, glm::vec3(0.0, 0.0, 0.249548));
-			//modelHeliHeli.render(modelMatrixHeliHeli);
-
-			// Render the lamps
-			for (int i = 0; i < lamp1Position.size(); i++) {
-				lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x, lamp1Position[i].z);
-				modelLamp1.setPosition(lamp1Position[i]);
-				modelLamp1.setScale(glm::vec3(0.5, 0.5, 0.5));
-				modelLamp1.setOrientation(glm::vec3(0, lamp1Orientation[i], 0));
-				modelLamp1.render();
-			}
-
-			for (int i = 0; i < lamp2Position.size(); i++)
-			{
-				lamp2Position[i].y = terrain.getHeightTerrain(lamp2Position[i].x, lamp2Position[i].z);
-				modelLamp2.setPosition(lamp2Position[i]);
-				modelLamp2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
-				modelLamp2.render();
-				modelLampPost2.setPosition(lamp2Position[i]);
-				modelLampPost2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
-				modelLampPost2.render();
-			}
-
-			/*Render modelo GRASS*/
-			//glDisable(GL_CULL_FACE);
-			//glm::vec3 grassPosition = glm::vec3(0.0f);
-			//grassPosition.y = terrain.getHeightTerrain(grassPosition.x, grassPosition.z);
-			//modelGrass.setPosition(grassPosition);
-			//modelGrass.render();
-			//glEnable(GL_CULL_FACE);
-
-			// Fountain
-			glDisable(GL_CULL_FACE);
-			modelFountain.render(modelMatrixFountain);
-			glEnable(GL_CULL_FACE);
-
-			glm::mat4 modelMatrixEstadioBody = glm::mat4(modelMatrixEstadio);
-			modelMatrixEstadioBody = glm::rotate(modelMatrixEstadioBody, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			modelMatrixEstadioBody[3][1] = terrain.getHeightTerrain(modelMatrixEstadioBody[3][0], modelMatrixEstadioBody[3][2]);
-			modelMatrixEstadioBody = glm::scale(modelMatrixEstadioBody, glm::vec3(1.0f, 1.0f, 1.0f) * 2.0f);
-			modelEstadio.render(modelMatrixEstadioBody);
-
-			/*******************
-			* Obstaculos       *
-			 ******************/
-			if (isRunning)
-			{
-				if (TimeManager::Instance().GetRunningTime() - timeInt > intervaloObstaculos &&
-					contObs < obstaculos.size())
-				{
-					std::get<1>(obstaculos.find(namesObs.at(contObs))->second) = true;
-					contObs++;
-					timeInt = TimeManager::Instance().GetRunningTime();
-				}
-
-				for (std::map<std::string, std::tuple<glm::mat4, bool, Model*>>::iterator it = obstaculos.begin();
-					it != obstaculos.end(); it++)
-				{
-					if (std::get<1>(it->second))
-					{
-						processObstacles(it->first);
-						std::get<2>(it->second)->render(std::get<0>(it->second));
-					}
-				}
-			}
 			
-		  /*******************************************
-		  * Custom Anim objects obj
-		  *******************************************/
-			modelMatrixPlayer[3][1] = -tmv * tmv * gravity + 3.0 * tmv + terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
-			tmv = currTime - startTimeJump;
-			if (modelMatrixPlayer[3][1] < terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]))
-			{
-				isJump = false;
-				modelMatrixPlayer[3][1] = terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
-				//animationIndex = 1;
-			}
-			glm::mat4 modelMatrixPlayerBody = glm::mat4(modelMatrixPlayer);
-			modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale());
-			if (isRunning)
-				animationIndex = 1;
-			//else
-			//	animationIndex = 0;
-			modelPlayerAnim.setAnimationIndex(animationIndex);
-			modelPlayerAnim.render(modelMatrixPlayerBody);
-
-			//Pista
-			glm::mat4 matrixPista = glm::mat4(1.0f);
-			matrixPista[3][1] = terrain.getHeightTerrain(matrixPista[3][0], matrixPista[3][2]);
-			matrixPista = glm::rotate(matrixPista, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			matrixPista = glm::scale(matrixPista, glm::vec3(12.0f, 0.1f, 12.0f));
-
-			// Se activa la textura del background
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureCespedID);
-			shaderTerrain.setInt("backgroundTexture", 0);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainBID);
-			shaderTerrain.setInt("textureB", 2);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainRID);
-			shaderTerrain.setInt("textureR", 3);
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainGID);
-			glActiveTexture(GL_TEXTURE5);
-			shaderTerrain.setInt("textureG", 4);
-			glBindTexture(GL_TEXTURE_2D, texturePistaBlendMapID);
-			shaderTerrain.setInt("textureBlendMap", 5);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(10, 10)));
-			if (isRunning)
-				pista.setPosition(pista.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
-			if (pista.getPosition().z <= -0.6 && esInicio) {
-				pista.setPosition(glm::vec3(0.0, 0.0, 2.4));
-			}
-			else if (pista.getPosition().z < -0.6 && !esInicio && esPista1)
-			{
-				pista.setPosition(glm::vec3(0.0, 0.0, 2.4));
-			}
-			pista.render(matrixPista);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//Pista2
-			glm::mat4 matrixPista2 = glm::mat4(1.0f);
-			matrixPista2[3][1] = terrain.getHeightTerrain(matrixPista2[3][0], matrixPista2[3][2]);
-			matrixPista2 = glm::translate(matrixPista2, glm::vec3(12.0f, 0.0f, 0.0f));
-			matrixPista2 = glm::rotate(matrixPista2, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			matrixPista2 = glm::scale(matrixPista2, glm::vec3(12.0f, 0.1f, 12.0f));
-
-			// Se activa la textura del background
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureCespedID);
-			shaderTerrain.setInt("backgroundTexture", 0);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainBID);
-			shaderTerrain.setInt("textureB", 2);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainRID);
-			shaderTerrain.setInt("textureR", 3);
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainGID);
-			glActiveTexture(GL_TEXTURE5);
-			shaderTerrain.setInt("textureG", 4);
-			glBindTexture(GL_TEXTURE_2D, texturePistaBlendMapID);
-			shaderTerrain.setInt("textureBlendMap", 5);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(10, 10)));
-			if (pista2.getPosition().z <= -1.8 && esInicio) {
-				pista2.setPosition(glm::vec3(0.0, 0.0, 1.2));
-			}
-			else if (pista2.getPosition().z <= -1.8 && !esInicio && esPista1) {
-				pista2.setPosition(glm::vec3(0.0, 0.0, 1.2));
-			}
-			if (isRunning)
-				pista2.setPosition(pista2.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
-
-			pista2.render(matrixPista2);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//Pista3
-			glm::mat4 matrixPista3 = glm::mat4(1.0f);
-			matrixPista3[3][1] = terrain.getHeightTerrain(matrixPista3[3][0], matrixPista3[3][2]);
-			matrixPista3 = glm::translate(matrixPista3, glm::vec3(24.0f, 0.0f, 0.0f));
-			matrixPista3 = glm::rotate(matrixPista3, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			matrixPista3 = glm::scale(matrixPista3, glm::vec3(12.0f, 0.1f, 12.0f));
-
-			// Se activa la textura del background
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureCespedID);
-			shaderTerrain.setInt("backgroundTexture", 0);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainBID);
-			shaderTerrain.setInt("textureB", 2);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainRID);
-			shaderTerrain.setInt("textureR", 3);
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, textureTerrainGID);
-			glActiveTexture(GL_TEXTURE5);
-			shaderTerrain.setInt("textureG", 4);
-			glBindTexture(GL_TEXTURE_2D, texturePistaBlendMapID);
-			shaderTerrain.setInt("textureBlendMap", 5);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(10, 10)));
-			if (pista3.getPosition().z <= -3.0 && esInicio) {
-				pista3.setPosition(glm::vec3(0.0, 0.0, 0.0));
-				esInicio = false;
-				esPista1 = true;
-			}
-			else if (pista3.getPosition().z <= -3.0 && !esInicio && esPista1) {
-				pista3.setPosition(glm::vec3(0.0, 0.0, 0.0));
-			}
-			if (isRunning)
-				pista3.setPosition(pista3.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
-
-			pista3.render(matrixPista3);
-			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//std::cout << pista.getPosition().z << "," << pista2.getPosition().z << "," << pista3.getPosition().z << std::endl;
-
-			//Curva
-			//glm::mat4 modelMatrixCurvaBody = modelMatrixCurva;
-			//modelMatrixCurvaBody[3][1] = terrain.getHeightTerrain(modelMatrixCurvaBody[3][0], modelMatrixCurvaBody[3][2]);
-			////modelMatrixCurvaBody = glm::translate(modelMatrixCurvaBody, glm::vec3(0.0f, 0.0f, -deltaTime*10));
-			////modelMatrixCurvaBody = glm::rotate(modelMatrixCurvaBody, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			//modelMatrixCurvaBody = glm::scale(modelMatrixCurvaBody, glm::vec3(12.0f, 0.1f, 12.0f));
-			//
-			//// Se activa la textura del background
-			//glActiveTexture(GL_TEXTURE0);
-			//glBindTexture(GL_TEXTURE_2D, textureCespedID);
-			//shaderTerrain.setInt("backgroundTexture", 0);
-			//glActiveTexture(GL_TEXTURE2);
-			//glBindTexture(GL_TEXTURE_2D, textureTerrainBID);
-			//shaderTerrain.setInt("textureB", 2);
-			//glActiveTexture(GL_TEXTURE3);
-			//glBindTexture(GL_TEXTURE_2D, textureTerrainRID);
-			//shaderTerrain.setInt("textureR", 3);
-			//glActiveTexture(GL_TEXTURE4);
-			//glBindTexture(GL_TEXTURE_2D, textureTerrainGID);
-			//glActiveTexture(GL_TEXTURE5);
-			//shaderTerrain.setInt("textureG", 4);
-			//glBindTexture(GL_TEXTURE_2D, textureCurvaBlendMapID);
-			//shaderTerrain.setInt("textureBlendMap", 5);
-			//shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(10, 10)));
-			//if (curva.getPosition().z < -0.45 && curva.getOrientation().y < 90) {
-			//	curva.setOrientation(curva.getOrientation() + glm::vec3(0.0f, deltaTime * 9, 0.0f));
-			//	pista.setOrientation(pista.getOrientation() + glm::vec3(0.0f, deltaTime * 9, 0.0f));
-			//}
-			//std::cout << curva.getPosition().z << ","<< curva.getOrientation().y<<std::endl;
-			//curva.setPosition(curva.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
-			//curva.render(modelMatrixCurvaBody);
-			//shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
-			//glBindTexture(GL_TEXTURE_2D, 0);
-
 			/*******************************************
 			* Skybox
 			*******************************************/
@@ -2075,51 +1835,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				addOrUpdateColliders(collidersOBB, "obstacle-" + std::to_string(l), obstacleCollider, modelMatrixObsCollider);
 				l++;
 			}
-			// Lamps1 colliders
-			//for (int i = 0; i < lamp1Position.size(); i++) {
-			//	AbstractModel::OBB lampCollider;
-			//	glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
-			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp1Position[i]);
-			//	modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp, glm::radians(lamp1Orientation[i]),
-			//		glm::vec3(0, 1, 0));
-			//	// Set the orientation of collider before doing the scale
-			//	lampCollider.u = glm::quat_cast(modelMatrixColliderLamp);
-			//	modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(0.5, 0.5, 0.5));
-			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, modelLamp1.getObb().c);
-			//	lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			//	lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
-			//	addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i), lampCollider, modelMatrixColliderLamp);
-			//}
-			//for (int i = 0; i < lamp2Position.size(); i++)
-			//{
-			//	AbstractModel::OBB lamp2Collider;
-			//	glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0f);
-			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, lamp2Position[i]);
-			//	modelMatrixColliderLamp = glm::rotate(modelMatrixColliderLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0.0f, 1.0f, 0.0f));
-			//	lamp2Collider.u = glm::quat_cast(modelMatrixColliderLamp);
-			//	modelMatrixColliderLamp = glm::scale(modelMatrixColliderLamp, glm::vec3(1.0f, 1.0f, 1.0f));
-			//	modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp, modelLampPost2.getObb().c);
-			//	lamp2Collider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			//	lamp2Collider.e = modelLampPost2.getObb().e * 1.0f;
-			//	addOrUpdateColliders(collidersOBB, "Lamp2-" + std::to_string(i), lamp2Collider, modelMatrixColliderLamp);
-			//}
 
-			////Colision esfera vs esfera
-			//for (std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it = collidersSBB.begin();
-			//	it != collidersSBB.end(); it++)
-			//{
-			//	bool isCollision = false;
-			//	for (std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator jt = collidersSBB.begin();
-			//		jt != collidersSBB.end() && !isCollision; jt++)
-			//	{
-			//		if (it != jt && testSphereSphereIntersection(std::get<0>(it->second), std::get<0>(jt->second)))
-			//		{
-			//			//std::cout << "Existe colisión entre: " << it->first << " y " << jt->first<<std::endl;
-			//			isCollision = true;
-			//		}
-			//	}
-			//	addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
-			//}
 
 			//Colision caja vs caja
 			for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator it = collidersOBB.begin();
@@ -2131,32 +1847,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				{
 					if (it != jt && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second)))
 					{
-						std::cout << "Existe colisión entre: " << it->first << " y " << jt->first << std::endl;
+						//std::cout << "Existe colisión entre: " << it->first << " y " << jt->first << std::endl;
 						isCollision = true;
 					}
 				}
 				addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
 			}
-
-			////colision caja vs esfera
-			//for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator it = collidersOBB.begin();
-			//	it != collidersOBB.end(); it++)
-			//{
-			//	bool isCollision = false;
-			//	for (std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator jt = collidersSBB.begin();
-			//		jt != collidersSBB.end(); jt++)
-			//	{
-
-			//		if (testSphereOBox(std::get<0>(jt->second), std::get<0>(it->second)))
-			//		{
-			//			isCollision = true;
-			//			//std::cout << "Hay colision entre " << jt->first << " y " << it->first << std::endl;
-			//			//std::cout << "Hay colision entre " << it->first << " y " << jt->first << std::endl;
-			//			addOrUpdateCollisionDetection(collisionDetection, jt->first, true);
-			//		}
-			//	}
-			//	addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
-			//}
 
 			std::map<std::string, bool>::iterator it2;
 			for (it2 = collisionDetection.begin(); it2 != collisionDetection.end(); it2++)
@@ -2190,6 +1886,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 					}
 				}
 			}
+
 			/*******************************************
 			 * Render de colliders
 			*******************************************/
@@ -2204,15 +1901,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				boxCollider.render(matrixCollider);
 			}
 
-			//for (std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
-			//	collidersSBB.begin(); it != collidersSBB.end(); it++) {
-			//	glm::mat4 matrixCollider = glm::mat4(1.0);
-			//	matrixCollider = glm::translate(matrixCollider, std::get<0>(it->second).c);
-			//	matrixCollider = glm::scale(matrixCollider, glm::vec3(std::get<0>(it->second).ratio * 2.0f));
-			//	sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-			//	sphereCollider.enableWireMode();
-			//	sphereCollider.render(matrixCollider);
-			//}
 
 		//UI
 		std::stringstream miliTxt;
@@ -2392,6 +2080,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelObstaculo6.setShader(&shaderMulLighting);
 		modelObstaculo7.setShader(&shaderMulLighting);
 		modelObstaculo8.setShader(&shaderMulLighting);
+		modelObstaculo9.setShader(&shaderMulLighting);
+		modelObstaculo10.setShader(&shaderMulLighting);
 
 		//Lamp models
 		modelLamp1.setShader(&shaderMulLighting);
@@ -2430,6 +2120,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		modelObstaculo6.setShader(&shaderDepth);
 		modelObstaculo7.setShader(&shaderDepth);
 		modelObstaculo8.setShader(&shaderDepth);
+		modelObstaculo9.setShader(&shaderDepth);
+		modelObstaculo10.setShader(&shaderDepth);
 
 		//Lamp models
 		modelLamp1.setShader(&shaderDepth);
@@ -2441,9 +2133,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/*******************************************
 		* Terrain Cesped
 		*******************************************/
-		//glm::mat4 modelCesped = glm::mat4(1.0);
-		//modelCesped = glm::translate(modelCesped, glm::vec3(0.0, 0.0, 0.0));
-		//modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
 		// Se activa la textura del background
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureCespedID);
@@ -2468,16 +2157,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/*******************************************
 		 * Custom objects obj
 		 *******************************************/
-
-		 // Helicopter
-		glm::mat4 modelMatrixHeliChasis = glm::mat4(modelMatrixHeli);
-		//modelHeliChasis.render(modelMatrixHeliChasis);
-
-		glm::mat4 modelMatrixHeliHeli = glm::mat4(modelMatrixHeliChasis);
-		//modelMatrixHeliHeli = glm::translate(modelMatrixHeliHeli, glm::vec3(0.0, 0.0, -0.249548));
-		//modelMatrixHeliHeli = glm::rotate(modelMatrixHeliHeli, rotHelHelY, glm::vec3(0, 1, 0));
-		//modelMatrixHeliHeli = glm::translate(modelMatrixHeliHeli, glm::vec3(0.0, 0.0, 0.249548));
-		//modelHeliHeli.render(modelMatrixHeliHeli);
+		/*glm::mat4 modelMatrixLego = glm::mat4(1.0f);
+		modelMatrixLego = glm::translate(modelMatrixLego, glm::vec3(3.0f, 0.0f, 0.0f));
+		modelMatrixLego[3][1] = terrain.getHeightTerrain(modelMatrixLego[3][0], modelMatrixLego[3][2]);
+		modelMatrixLego = glm::rotate(modelMatrixLego, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelMatrixLego = glm::scale(modelMatrixLego, glm::vec3(1.0f) * 1.0f);
+		modelLego.render(modelMatrixLego);*/
 
 		// Render the lamps
 		for (int i = 0; i < lamp1Position.size(); i++) {
@@ -2523,10 +2208,17 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		 ******************/
 		if (isRunning)
 		{
+			int obstaculo = 0;
+
 			if (TimeManager::Instance().GetRunningTime() - timeInt > intervaloObstaculos &&
 				contObs < obstaculos.size())
 			{
-				std::get<1>(obstaculos.find(namesObs.at(contObs))->second) = true;
+				do
+				{
+					obstaculo = rand() % obstaculos.size();
+				} while (std::get<1>(obstaculos.find(namesObs.at(obstaculo))->second));
+
+				std::get<1>(obstaculos.find(namesObs.at(obstaculo))->second) = true;
 				contObs++;
 				timeInt = TimeManager::Instance().GetRunningTime();
 			}
