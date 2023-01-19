@@ -71,7 +71,6 @@ Shader shaderParticulasFountain;
 glm::vec3 ambientLight, diffuseLight, specularLight, directionLight;
 
 //Camaras
-//std::shared_ptr<FirstPersonCamera> cameraFP(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromPlayer = 7.0f;
 
@@ -101,7 +100,6 @@ float intervaloObstaculos = 10.0f;
 int sizeObstaculos = 0;
 std::vector<std::string> namesObs;
 
-
 //Variables de control para el movimiento de la pista
 int step = 2;
 float stepVel = 0.1f;
@@ -113,6 +111,10 @@ Box pista;
 Box pista2;
 Box pista3;
 Box curva;
+
+//Game Controller
+bool isStart = true;
+bool isRunning = false;
 
 Model modelHeliChasis;
 Model modelHeliHeli;
@@ -216,6 +218,13 @@ bool processInput(bool continueApplication = true);
 void inicializacionParticulasFountain();
 int getObstaclePosition();
 void processObstacles(std::string name);
+void gameOver();
+
+void gameOver() {
+	isRunning = false;
+	animationIndex = 3;
+
+}
 
 void processObstacles(std::string name) {
 	
@@ -385,8 +394,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
 	terrain.setPosition(glm::vec3(100, 0, 100));
-
-
 
 	/*Player*/
 	player.setModel("finn");
@@ -989,6 +996,17 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			animationIndex = 4;
 		}
 
+		if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+		{
+			isRunning = true;
+			isStart = false;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
+		{
+			isRunning = !isRunning;
+		}
+
 		glfwPollEvents();
 		return continueApplication;
 	}
@@ -996,14 +1014,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	void applicationLoop() {
 		bool psi = true;
 
-		//
 		glm::mat4 view;
 		glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::vec3 axisTarget;
 		float angleTarget;
 		float timeInt = -intervaloObstaculos;
 		int contObs = 0;
-	
+		float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f;
 		
 		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 3.0f, 0.0f));
 		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1080,6 +1097,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				glfwPollEvents();
 				continue;
 			}
+
 			lastTime = currTime;
 			TimeManager::Instance().CalculateFrameRate(true);
 			deltaTime = TimeManager::Instance().DeltaTime;
@@ -1340,24 +1358,27 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/*******************
 			* Obstaculos       *
 			 ******************/
-			if (TimeManager::Instance().GetRunningTime() - timeInt > intervaloObstaculos && 
-				contObs<obstaculos.size())
+			if (isRunning)
 			{
-				std::get<1>(obstaculos.find(namesObs.at(contObs))->second) = true;
-				contObs++; 
-				timeInt = TimeManager::Instance().GetRunningTime();
-			}
-
-			for (std::map<std::string, std::tuple<glm::mat4, bool, Model*>>::iterator it = obstaculos.begin();
-				it != obstaculos.end(); it++)
-			{
-				if (std::get<1>(it->second))
+				if (TimeManager::Instance().GetRunningTime() - timeInt > intervaloObstaculos &&
+					contObs < obstaculos.size())
 				{
-					processObstacles(it->first);
-					std::get<2>(it->second)->render(std::get<0>(it->second));
+					std::get<1>(obstaculos.find(namesObs.at(contObs))->second) = true;
+					contObs++;
+					timeInt = TimeManager::Instance().GetRunningTime();
+				}
+
+				for (std::map<std::string, std::tuple<glm::mat4, bool, Model*>>::iterator it = obstaculos.begin();
+					it != obstaculos.end(); it++)
+				{
+					if (std::get<1>(it->second))
+					{
+						processObstacles(it->first);
+						std::get<2>(it->second)->render(std::get<0>(it->second));
+					}
 				}
 			}
-
+			
 		  /*******************************************
 		  * Custom Anim objects obj
 		  *******************************************/
@@ -1367,10 +1388,14 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			{
 				isJump = false;
 				modelMatrixPlayer[3][1] = terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
-				animationIndex = 1;
+				//animationIndex = 1;
 			}
 			glm::mat4 modelMatrixPlayerBody = glm::mat4(modelMatrixPlayer);
 			modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale());
+			if (isRunning)
+				animationIndex = 1;
+			//else
+			//	animationIndex = 0;
 			modelPlayerAnim.setAnimationIndex(animationIndex);
 			modelPlayerAnim.render(modelMatrixPlayerBody);
 
@@ -1397,7 +1422,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			glBindTexture(GL_TEXTURE_2D, texturePistaBlendMapID);
 			shaderTerrain.setInt("textureBlendMap", 5);
 			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(10, 10)));
-			pista.setPosition(pista.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
+			if (isRunning)
+				pista.setPosition(pista.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
 			if (pista.getPosition().z <= -0.6 && esInicio) {
 				pista.setPosition(glm::vec3(0.0, 0.0, 2.4));
 			}
@@ -1405,7 +1431,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			{
 				pista.setPosition(glm::vec3(0.0, 0.0, 2.4));
 			}
-			//std::cout << pista.getScale().z << std::endl;
 			pista.render(matrixPista);
 			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -1440,7 +1465,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			else if (pista2.getPosition().z <= -1.8 && !esInicio && esPista1) {
 				pista2.setPosition(glm::vec3(0.0, 0.0, 1.2));
 			}
-			pista2.setPosition(pista2.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
+			if (isRunning)
+				pista2.setPosition(pista2.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
+
 			pista2.render(matrixPista2);
 			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -1477,7 +1504,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			else if (pista3.getPosition().z <= -3.0 && !esInicio && esPista1) {
 				pista3.setPosition(glm::vec3(0.0, 0.0, 0.0));
 			}
-			pista3.setPosition(pista3.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
+			if (isRunning)
+				pista3.setPosition(pista3.getPosition() + glm::vec3(0.0f, 0.0f, -deltaTime * velocity));
+
 			pista3.render(matrixPista3);
 			shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -1728,6 +1757,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 						if (modeloBuscadoOBB->first.compare("player") == 0)
 						{
 							std::cout << "Hay colision con player" << std::endl;
+							gameOver();
 						}
 					}
 				}
@@ -1762,15 +1792,31 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::stringstream minTxt;
 		float time = TimeManager::Instance().GetRunningTime();
 		int segundos = 0, minutos = 0, milisegundos = 0;
-		milisegundos = (int)(fmod(time, 1) * 100);
-		if (time >= 60)
+
+		/*Controlador Time para UI*/
+		if (!isRunning && startTimeCont)
+			startTimeCont = time;
+		else if (!isRunning && !startTimeCont)
 		{
-			minutos = (int)time / 60;
-			segundos = (int)(time - (minutos * 60));
+			pauseTime = time - startTime - runningTime;
 		}
-		else
+		else if (isRunning && !startTimeCont)
 		{
-			segundos = (int)(time);
+			runningTime = time - startTime - pauseTime;
+		}
+
+		if (isRunning)
+		{
+			milisegundos = (int)(fmod(runningTime, 1) * 100);
+			if (time >= 60)
+			{
+				minutos = (int)runningTime / 60;
+				segundos = (int)(runningTime - (minutos * 60));
+			}
+			else
+			{
+				segundos = (int)(runningTime);
+			}	
 		}
 		miliTxt << std::setw(2) << std::setfill('0') << milisegundos;
 		segTxt << std::setw(2) << std::setfill('0') << segundos;
@@ -1788,35 +1834,28 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			case 1:
 				if (!isRight && modelMatrixPlayer[3][2] >= -2.0)
 				{
-					//std::cout << modelMatrixPlayer[3][2] << std::endl;
 					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] - stepVel;
-					
 				}
 				if (modelMatrixPlayer[3][2] < -2.0 && isPress)
 				{
 					modelMatrixPlayer[3][2] = -2;
-					//std::cout << "end pressing" << std::endl;
 					isPress = false;
 				}
 				break;
 			case 2:
 				if (isRight && modelMatrixPlayer[3][2] <= 0)
 				{
-					//std::cout << modelMatrixPlayer[3][2] << std::endl;
 					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] + stepVel;
 				}
 				if (isRight && modelMatrixPlayer[3][2] > 0 && isPress)
 				{
-					//std::cout << "end pressing 2" << std::endl;
 					isPress = false;
 				}
 				if (!isRight && modelMatrixPlayer[3][2] > 0) {
-					//std::cout << modelMatrixPlayer[3][2] << std::endl;
 					modelMatrixPlayer[3][2] = modelMatrixPlayer[3][2] - stepVel;
 				}
 				if (!isRight && modelMatrixPlayer[3][2] < 0 && isPress)
 				{
-					//std::cout << "end pressing 2" << std::endl;
 					isPress = false;
 				}
 				
