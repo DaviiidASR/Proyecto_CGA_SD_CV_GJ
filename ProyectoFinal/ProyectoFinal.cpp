@@ -97,6 +97,7 @@ Sphere sphereCollider(10, 10);
 Box boxViewDepth;
 Box boxLightViewBox;
 Box boxIntro;
+
 // Models complex instances
 Model modelPlayerAnim1;
 Model modelPlayerAnim2;
@@ -150,6 +151,15 @@ float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f, stopTime = 0.0
 Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap2.png");
 GLuint skyboxTextureID;
 
+//Definicion de variables para el sistema de partuculas
+GLuint initVel, startTime;
+GLuint VAOParticulas;
+GLuint numParticulas = 8000;
+double currTimeParticulas, lastTimeParticulas;
+
+// Blending model unsorted
+std::map<std::string, glm::vec3> blendingUnsorted = {{"particulasAgua", glm::vec3(0.0f)}};
+
 //UI
 FontTypeRendering::FontTypeRendering* textRender;
 FontTypeRendering::FontTypeRendering* textBestScore;
@@ -161,7 +171,7 @@ float startTextX = -0.5;
 GLuint texturaMenuID, texturaSelFinnID, texturaSelJakeID, texturaSelLegoID, texturaActivaID, texturaGameoverID;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID, textureTerrainBID, 
 	textureTerrainBlendMapID, texturePistaBlendMapID, textureCurvaBlendMapID;
-GLuint textureCespedID;
+GLuint textureCespedID, textureParticulaAguaID;
 
 GLenum types[6] = {
 GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -268,9 +278,70 @@ bool processInput(bool continueApplication = true);
 void prepareScene();
 void prepareDepthScene();
 void renderScene(bool renderParticles = true);
+void inicializacionParticulas();
 int getObstaclePosition();
 void processObstacles(std::string name);
 void gameOver();
+
+void inicializacionParticulas()
+{
+	//generarBuffers
+	glGenBuffers(1, &initVel);
+	glGenBuffers(1, &startTime);
+
+	//generara el espacion de todos los buffers
+	int size = numParticulas * 3 * sizeof(float);
+	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+	glBufferData(GL_ARRAY_BUFFER, numParticulas * sizeof(float), NULL, GL_STATIC_DRAW);
+
+	//llenar las velocidades iniciales
+	glm::vec3 v(0.0f);
+	float velocity, theta, pi;
+	GLfloat* data = new GLfloat[numParticulas * 3];
+	for (unsigned int i = 0; i < numParticulas; i++) {
+		theta = glm::mix(0.0f, glm::pi<float>() / 6.0f, ((float)rand() / RAND_MAX));
+		pi = glm::mix(0.0f, glm::two_pi<float>(), ((float)rand() / RAND_MAX));
+		v.x = sinf(theta) * cosf(pi);
+		v.y = cosf(theta);
+		v.z = sinf(theta);
+
+		velocity = glm::mix(0.5f, 0.7f, ((float)rand() / RAND_MAX));
+		v = glm::normalize(v) * velocity;
+		data[3 * i] = v.x;
+		data[3 * i + 1] = v.y;
+		data[3 * i + 2] = v.z;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); //a partir de una memoria almacenada se refresca
+
+	//LLenar el buffer de tiempo de inicio
+	delete[] data;
+	data = new GLfloat[numParticulas];
+	float time = 0.0f;
+	float rate = 0.00075f;
+	for (unsigned int i = 0; i < numParticulas; i++) {
+		data[i] = time;
+		time += rate;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, numParticulas * sizeof(float), data);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	delete[] data;
+
+	glGenVertexArrays(1, &VAOParticulas);
+	glBindVertexArray(VAOParticulas);
+	glBindBuffer(GL_ARRAY_BUFFER, initVel);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, startTime);
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+}
 
 void gameOver() {
 
@@ -324,6 +395,10 @@ int getObstaclePosition() {
 	if (posObs1 == 1)
 		posObs1 = 2;
 	else if (posObs1 == -1)
+		posObs1 = -2;
+	else if(posObs1 == 4)
+		posObs1 = 2;
+	else if (posObs1 == -4)
 		posObs1 = -2;
 	std::cout << posObs1 << std::endl;
 	return posObs1;
@@ -911,6 +986,43 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Libera la memoria de la textura
 	textureLegoSelect.freeImage(bitmap);
 	/*******************************************FIN TEXTURAS DE LA INTERFAZ MENU PRINCIPAL****************************************/
+	
+	/*************************
+	* Textura para la lluvia *
+	**************************/
+	// Definiendo la textura a utilizar
+	Texture textureParticulaAgua("../Textures/bluewater.png");
+	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
+	bitmap = textureParticulaAgua.loadImage(true);
+	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
+	data = textureParticulaAgua.convertToData(bitmap, imageWidth,
+		imageHeight);
+	// Creando la textura con id 1
+	glGenTextures(1, &textureParticulaAguaID);
+	// Enlazar esa textura a una tipo de textura de 2D.
+	glBindTexture(GL_TEXTURE_2D, textureParticulaAguaID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Verifica si se pudo abrir la textura
+	if (data) {
+		// Transferis los datos de la imagen a memoria
+		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
+		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
+		// a los datos
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	// Libera la memoria de la textura
+	textureParticulaAgua.freeImage(bitmap);
+	inicializacionParticulas();
 
 	/*******************************************
 	 * Inicializacion del framebuffer para
@@ -1087,6 +1199,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// Textures Delete
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &textureCespedID);
+		glDeleteTextures(1, &textureParticulaAguaID);
 		glDeleteTextures(1, &textureTerrainBackgroundID);
 		glDeleteTextures(1, &textureTerrainRID);
 		glDeleteTextures(1, &textureTerrainGID);
@@ -1216,7 +1329,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &numberAxes);
 			//std::cout << "Numero de ejes:... " << numberAxes << std::endl;
 
-			if (fabs(axes[0]) > 1.0f)
+			/*if (fabs(axes[0]) > 1.0f)
 			{
 				std::cout << "Soy axes 0" << std::endl;
 			}
@@ -1243,7 +1356,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			if (fabs(axes[5]) > 0.5f)
 			{
 				std::cout << "Soy axes 5" << std::endl;
-			}
+			}*/
+
 			const unsigned char* botones = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &numberBotones);
 			//std::cout << "numero de botones " << numberBotones << std::endl;
 		
@@ -1261,44 +1375,48 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			{
 				isRunning = !isRunning;
 			}
+			
+			if (isRunning) 
+			{
+				if (botones[11] == GLFW_PRESS)
+				{
+					std::cout << "se presiona right" << std::endl;
+					alSourcePlay(source[4]);
+					if ((step == 3 || step == 2) && !isPress)
+						step = 3;
+					else if (step == 1 && !isPress)
+						step = 2;
+					std::cout << "Step: " << step << std::endl;
+					isRight = true;
+					isPress = true;
+				}
 
-			if (botones[11] == GLFW_PRESS)
-			{
-				std::cout << "se presiona right" << std::endl;
-				alSourcePlay(source[4]);
-				if ((step == 3 || step == 2) && !isPress)
-					step = 3;
-				else if (step == 1 && !isPress)
-					step = 2;
-				std::cout << "Step: " << step << std::endl;
-				isRight = true;
-				isPress = true;
-			}
-				
-			if (botones[12] == GLFW_PRESS)
-				std::cout << "se presiona 12" << std::endl;
-			if (botones[13] == GLFW_PRESS)
-			{
-				std::cout << "se presiona left" << std::endl;
-				alSourcePlay(source[4]);
-				if (step == 3 && !isPress)
-					step = 2;
-				else if ((step == 1 || step == 2) && !isPress)
-					step = 1;
-				std::cout << "Step: " << step << std::endl;
-				isRight = false;
-				isPress = true;
-			}
+				if (botones[12] == GLFW_PRESS)
+					std::cout << "se presiona 12" << std::endl;
+				if (botones[13] == GLFW_PRESS)
+				{
+					std::cout << "se presiona left" << std::endl;
+					alSourcePlay(source[4]);
+					if (step == 3 && !isPress)
+						step = 2;
+					else if ((step == 1 || step == 2) && !isPress)
+						step = 1;
+					std::cout << "Step: " << step << std::endl;
+					isRight = false;
+					isPress = true;
+				}
 
-			bool jumpStatus = botones[0] == GLFW_PRESS;
-			if (!isJump && jumpStatus)
-			{
-				isJump = true;
-				tmv = 0;
-				startTimeJump = currTime;
-				animationIndex = 4;
-				alSourcePlay(source[4]);
+				bool jumpStatus = botones[0] == GLFW_PRESS;
+				if (!isJump && jumpStatus)
+				{
+					isJump = true;
+					tmv = 0;
+					startTimeJump = currTime;
+					animationIndex = 4;
+					alSourcePlay(source[4]);
+				}
 			}
+			
 				
 			if (!iniciaPartida) {
 				bool statusEnter = botones[3] == GLFW_PRESS;
@@ -2216,6 +2334,59 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glEnable(GL_CULL_FACE);
+
+		//LLuvia
+		glm::mat4 modelMatrixLLuvia = glm::mat4(1.0f);
+		modelMatrixLLuvia = glm::translate(modelMatrixLLuvia, glm::vec3(1.0f, 20.0f, -3.0f));
+
+		/******************************************
+		 * Update the position with alpha objects
+		 ******************************************/
+		blendingUnsorted.find("particulasAgua")->second = glm::vec3(modelMatrixLLuvia[3]);
+
+		/******************************
+		 * Sorter with alpha objects  *
+		 ******************************/
+		std::map<float, std::pair<std::string, glm::vec3>> blendingSorted;
+		std::map<std::string, glm::vec3>::iterator itblend;
+		for (itblend = blendingUnsorted.begin(); itblend != blendingUnsorted.end(); itblend++) {
+			float distanceFromView = glm::length(camera->getPosition() - itblend->second);
+			blendingSorted[distanceFromView] = std::make_pair(itblend->first, itblend->second);
+		}
+
+		/**********
+		 * Render de las transparencias
+		 */
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_CULL_FACE);
+		for (std::map<float, std::pair<std::string, glm::vec3> >::reverse_iterator it = blendingSorted.rbegin(); it != blendingSorted.rend(); it++) {
+			if (it->second.first.compare("particulasAgua") == 0) {
+				//Inicializacion del sistema de particulas
+				glm::mat4 modelMatrixParticulasFuente = glm::mat4(1.0f);
+				modelMatrixParticulasFuente = glm::translate(modelMatrixParticulasFuente, it->second.second);
+				modelMatrixParticulasFuente = glm::scale(modelMatrixParticulasFuente, glm::vec3(1.0f, 1.0f, 1.0f) * 2.0f);
+				currTimeParticulas = TimeManager::Instance().GetTime();
+				if (currTimeParticulas - lastTimeParticulas > 17.0f)
+					lastTimeParticulas = currTimeParticulas;
+				glDepthMask(GL_FALSE);
+				glPointSize(10.0f);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, textureParticulaAguaID);
+				shaderParticulasFountain.turnOn();
+				shaderParticulasFountain.setFloat("Time", float(currTimeParticulas - lastTimeParticulas));
+				shaderParticulasFountain.setFloat("ParticleLifetime", 16.0f);
+				shaderParticulasFountain.setVectorFloat3("Gravity", glm::value_ptr(glm::vec3(0.0f, -0.1f, 0.0f)));
+				shaderParticulasFountain.setMatrix4("model", 1, false, glm::value_ptr(modelMatrixParticulasFuente));
+				shaderParticulasFountain.setInt("ParticleTex", 0);
+				glBindVertexArray(VAOParticulas);
+				glDrawArrays(GL_POINTS, 0, numParticulas);
+				glDepthMask(GL_TRUE);
+				shaderParticulasFountain.turnOff();
+			}
+		}
+		glEnable(GL_CULL_FACE);
+
 
 	}
 
