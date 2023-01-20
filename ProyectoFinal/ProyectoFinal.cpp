@@ -56,8 +56,9 @@
 
 #include "Headers/ShadowBox.h"
 
-///
+//Librerias Proyecto final
 #include "Player.h"
+#include "Score.h"
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
@@ -134,9 +135,12 @@ Box pista3;
 Box curva;
 
 //Game Controller
+Score score;
+float bestScore;
 bool isStart = true;
 bool isRunning = false;
 bool esInicio = true, esPista1 = false;
+float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f, stopTime = 0.0f;
 
 Model modelHeliChasis;
 Model modelHeliHeli;
@@ -153,6 +157,8 @@ Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap2.png");
 GLuint skyboxTextureID;
 
 FontTypeRendering::FontTypeRendering* textRender;
+FontTypeRendering::FontTypeRendering* textBestScore;
+
 /********************************DECLARACION DE TEXTURAS************************/
 GLuint texturaMenuID, texturaSelFinnID, texturaSelJakeID, texturaSelLegoID, texturaActivaID;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID, textureTerrainBID, 
@@ -277,6 +283,8 @@ int ch;
 ALboolean loop;
 //Este arreglo controla la ejecucion del sonido
 std::vector<bool> sourcesPlay = { true, true, true, true };
+
+
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action,
@@ -296,9 +304,15 @@ void processObstacles(std::string name);
 void gameOver();
 
 void gameOver() {
+	stopTime = runningTime;
 	isRunning = false;
 	animationIndex = 3;
-
+	
+	if (stopTime > bestScore)
+	{
+		bestScore = stopTime;
+		score.setScore(bestScore);
+	}
 }
 
 void processObstacles(std::string name) {
@@ -558,6 +572,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	textRender = new FontTypeRendering::FontTypeRendering(screenWidth, screenHeight);
 	textRender->Initialize();
+
+	textBestScore = new FontTypeRendering::FontTypeRendering(screenWidth, screenHeight);
+	textBestScore->Initialize();
 
 	// Definimos el tamanio de la imagen
 	int imageWidth, imageHeight;
@@ -1404,7 +1421,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		glm::vec3 axisTarget;
 		float angleTarget;
 
-		float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f;
+		bestScore = score.getScore();
 
 		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 3.0f, 0.0f));
 		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1906,6 +1923,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::stringstream miliTxt;
 		std::stringstream segTxt;
 		std::stringstream minTxt;
+		std::string s;
 		float time = TimeManager::Instance().GetRunningTime();
 		int segundos = 0, minutos = 0, milisegundos = 0;
 
@@ -1934,13 +1952,42 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				segundos = (int)(runningTime);
 			}	
 		}
+
 		miliTxt << std::setw(2) << std::setfill('0') << milisegundos;
 		segTxt << std::setw(2) << std::setfill('0') << segundos;
 		minTxt << std::setw(2) << std::setfill('0') << minutos;
-		std::string s = minTxt.str() + ":" + segTxt.str() + ":" + miliTxt.str();
+		s = minTxt.str() + ":" + segTxt.str() + ":" + miliTxt.str();
 		glEnable(GL_BLEND);
-		textRender->render(s, 0.6, 0.8, 60, 1.0, 0.9, 0.2);
+		textRender->render(s, 0.55, 0.8, 65, 1.0, 0.9, 0.2);
 		glDisable(GL_BLEND);
+
+
+		milisegundos = (int)(fmod(bestScore, 1) * 100);
+		if (time >= 60)
+		{
+			minutos = (int)bestScore / 60;
+			segundos = (int)(bestScore - (minutos * 60));
+		}
+		else
+		{
+			segundos = (int)(bestScore);
+		}
+
+		miliTxt.str("");
+		segTxt.str("");
+		minTxt.str("");
+
+		miliTxt << std::setw(2) << std::setfill('0') << milisegundos;
+		segTxt << std::setw(2) << std::setfill('0') << segundos;
+		minTxt << std::setw(2) << std::setfill('0') << minutos;
+		s = "Best score: " + minTxt.str() + ":" + segTxt.str() + ":" + miliTxt.str();
+		glEnable(GL_BLEND);
+		textBestScore->render(s, 0.58, 0.75, 25, 1.0, 0.9, 0.2);
+		glDisable(GL_BLEND);
+
+		miliTxt.str("");
+		segTxt.str("");
+		minTxt.str("");
 
 		/*********************
 		* Maquinas de estado *
