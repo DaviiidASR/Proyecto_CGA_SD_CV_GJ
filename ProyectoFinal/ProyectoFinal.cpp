@@ -98,10 +98,14 @@ Box boxViewDepth;
 Box boxLightViewBox;
 Box boxIntro;
 // Models complex instances
-Model modelPlayerAnim;
+Model modelPlayerAnim1;
+Model modelPlayerAnim2;
+Player player1;
+Player player2;
+std::vector<std::string> playerName;
 Model modelEstadio;
 
-Player player;
+
 //Obstaculos
 std::map<std::string, std::tuple<glm::mat4, bool, Model*>> obstaculos;
 Model modelObstaculo1;
@@ -114,6 +118,8 @@ Model modelObstaculo7;
 Model modelObstaculo8;
 Model modelObstaculo9;
 Model modelObstaculo10;
+Model modelObstaculo11;
+Model modelObstaculo12;
 
 //Variables obstaculos
 float offsetVelObs = 5.0f;
@@ -139,7 +145,7 @@ float bestScore;
 bool isStart = true, isGameOver = false;
 bool isRunning = false;
 bool esInicio = true, esPista1 = false;
-float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f, stopTime = 0.0f;
+float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f, stopTime = 0.0f, startTimeAnim = 0.0f;
 
 Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap2.png");
 GLuint skyboxTextureID;
@@ -265,6 +271,7 @@ void gameOver();
 void gameOver() {
 
 	isGameOver = true;
+	startTimeAnim = TimeManager::Instance().GetRunningTime();
 
 	alSourcePlay(source[3]);
 	alSourceStop(source[0]);
@@ -415,9 +422,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.setPosition(glm::vec3(100, 0, 100));
 
 	/*Player*/
-	player.setModel("finn");
-	modelPlayerAnim.loadModel(player.getPath());
-	modelPlayerAnim.setShader(&shaderMulLighting);
+	player1.setModel("finn");
+	modelPlayerAnim1.loadModel(player1.getPath());
+	modelPlayerAnim1.setShader(&shaderMulLighting);
+
+	player2.setModel("finn");
+	modelPlayerAnim2.loadModel(player2.getPath());
+	modelPlayerAnim2.setShader(&shaderMulLighting);
 
 	//Pista
 	pista.init();
@@ -1059,7 +1070,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 		// Custom objects animate
 		/*Player*/
-		modelPlayerAnim.destroy();
+		modelPlayerAnim1.destroy();
+		modelPlayerAnim2.destroy();
 		pista.destroy();
 		pista2.destroy();
 		pista3.destroy();
@@ -1426,8 +1438,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			std::get<0>(obstaculos.find("uno")->second), glm::vec3(18.0f, 0.0f, getObstaclePosition()));
 		std::get<0>(obstaculos.find("uno")->second) = glm::rotate(
 			std::get<0>(obstaculos.find("uno")->second), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		/*std::get<0>(obstaculos.find("uno")->second) = glm::scale(
-			std::get<0>(obstaculos.find("uno")->second), glm::vec3(1.0f) * 5.0f);*/
 
 		namesObs.push_back("dos");
 		obstaculos["dos"] = std::make_tuple(glm::mat4(1.0f), false, &modelObstaculo2);
@@ -1612,6 +1622,19 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				continue;
 			}
 
+			if (isGameOver && TimeManager::Instance().GetRunningTime() - startTimeAnim > 5.0f)
+			{
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				glViewport(0, 0, screenWidth, screenHeight);
+				shaderTextura.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0f)));
+				shaderTextura.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0f)));
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, texturaActivaID);
+				boxIntro.render();
+				glfwSwapBuffers(window);
+				continue;
+			}
+
 			/*******************************************
 			 * 1.- We render the depth buffer
 			 *******************************************/
@@ -1681,13 +1704,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			AbstractModel::OBB playerCollider;
 
 			modelMatrixColliderPlayer = glm::rotate(modelMatrixColliderPlayer,
-				glm::radians(player.getAngleRotCol()), player.getVectorRotCol());
+				glm::radians(player1.getAngleRotCol()), player1.getVectorRotCol());
 			playerCollider.u = glm::quat_cast(modelMatrixColliderPlayer);
-			modelMatrixColliderPlayer = glm::scale(modelMatrixColliderPlayer, glm::vec3(1.0f, 1.0f, 1.0f) * player.getScaleCol());
-			modelMatrixColliderPlayer = glm::translate(modelMatrixColliderPlayer, modelPlayerAnim.getObb().c);
-			playerCollider.c = glm::vec3(modelMatrixColliderPlayer[3]) + player.getOffsetC();
-			playerCollider.e = (modelPlayerAnim.getObb().e + player.getOffsetE()) *
-				((player.getScaleCol() == 0.0f) ? 1.0f : player.getScaleCol());
+			modelMatrixColliderPlayer = glm::scale(modelMatrixColliderPlayer, glm::vec3(1.0f, 1.0f, 1.0f) * player1.getScaleCol());
+			modelMatrixColliderPlayer = glm::translate(modelMatrixColliderPlayer, modelPlayerAnim1.getObb().c);
+			playerCollider.c = glm::vec3(modelMatrixColliderPlayer[3]) + player1.getOffsetC();
+			playerCollider.e = (modelPlayerAnim1.getObb().e + player1.getOffsetE()) *
+				((player1.getScaleCol() == 0.0f) ? 1.0f : player1.getScaleCol());
 			addOrUpdateColliders(collidersOBB, "player", playerCollider, modelMatrixPlayer);
 
 			/*************
@@ -1760,19 +1783,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				}
 			}
 			
-			/*******************************************
-			 * Render de colliders
-			*******************************************/
-			for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
-				collidersOBB.begin(); it != collidersOBB.end(); it++) {
-				glm::mat4 matrixCollider = glm::mat4(1.0);
-				matrixCollider = glm::translate(matrixCollider, std::get<0>(it->second).c);
-				matrixCollider = matrixCollider * glm::mat4(std::get<0>(it->second).u);
-				matrixCollider = glm::scale(matrixCollider, std::get<0>(it->second).e * 2.0f);
-				boxCollider.setColor(glm::vec4(0.0, 1.0, 0.0, 1.0));
-				boxCollider.enableWireMode();
-				boxCollider.render(matrixCollider);
-			}
+			
 
 		//UI
 		std::stringstream miliTxt;
@@ -1939,7 +1950,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		terrain.setShader(&shaderTerrain);
 
 		/*Player*/
-		modelPlayerAnim.setShader(&shaderMulLighting);
+		modelPlayerAnim1.setShader(&shaderMulLighting);
+		modelPlayerAnim2.setShader(&shaderMulLighting);
 		//Pista
 		pista.setShader(&shaderTerrain);
 		pista2.setShader(&shaderTerrain);
@@ -1974,7 +1986,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		terrain.setShader(&shaderDepth);
 
 		/*Player*/
-		modelPlayerAnim.setShader(&shaderDepth);
+		modelPlayerAnim1.setShader(&shaderDepth);
+		modelPlayerAnim2.setShader(&shaderDepth);
+
 		//Pista
 		pista.setShader(&shaderDepth);
 		pista2.setShader(&shaderDepth);
@@ -2066,6 +2080,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/*******************************************
 		* Custom Anim objects obj
 		*******************************************/
+
+
 		modelMatrixPlayer[3][1] = -tmv * tmv * gravity + 3.0 * tmv + terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
 		tmv = currTime - startTimeJump;
 		if (modelMatrixPlayer[3][1] < terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]))
@@ -2074,12 +2090,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			modelMatrixPlayer[3][1] = terrain.getHeightTerrain(modelMatrixPlayer[3][0], modelMatrixPlayer[3][2]);
 		}
 		glm::mat4 modelMatrixPlayerBody = glm::mat4(modelMatrixPlayer);
-		modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale());
+		modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player1.getModelScale());
 		if (isRunning && !isJump)
 			animationIndex = 1;
 		
-		modelPlayerAnim.setAnimationIndex(animationIndex);
-		modelPlayerAnim.render(modelMatrixPlayerBody);
+		modelPlayerAnim1.setAnimationIndex(animationIndex);
+		modelPlayerAnim1.render(modelMatrixPlayerBody);
 
 		//Pista
 		glm::mat4 matrixPista = glm::mat4(1.0f);
