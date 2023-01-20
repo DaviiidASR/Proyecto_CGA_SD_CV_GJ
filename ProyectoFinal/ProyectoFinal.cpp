@@ -137,7 +137,7 @@ Box curva;
 //Game Controller
 Score score;
 float bestScore;
-bool isStart = true;
+bool isStart = true, isGameOver = false;
 bool isRunning = false;
 bool esInicio = true, esPista1 = false;
 float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f, stopTime = 0.0f;
@@ -160,7 +160,7 @@ FontTypeRendering::FontTypeRendering* textRender;
 FontTypeRendering::FontTypeRendering* textBestScore;
 
 /********************************DECLARACION DE TEXTURAS************************/
-GLuint texturaMenuID, texturaSelFinnID, texturaSelJakeID, texturaSelLegoID, texturaActivaID;
+GLuint texturaMenuID, texturaSelFinnID, texturaSelJakeID, texturaSelLegoID, texturaActivaID, texturaGameoverID;
 GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID, textureTerrainBID, 
 	textureTerrainBlendMapID, texturePistaBlendMapID, textureCurvaBlendMapID;
 GLuint textureCespedID, textureParticleFountainID;
@@ -248,33 +248,44 @@ int contObs = 0;
 
 /**********************
  * OpenAL config
- */
+ ***********************/
 
  // OpenAL Defines
-#define NUM_BUFFERS 4
-#define NUM_SOURCES 4
+#define NUM_BUFFERS 7
+#define NUM_SOURCES 7
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
 // Source 0
-ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
+ALfloat source0Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
 // Source 1
-ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source1Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
 // Source 2
-ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source2Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
 // Source 3
-ALfloat source3Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source3Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source3Vel[] = { 0.0, 0.0, 0.0 };
+// Source 4
+ALfloat source4Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source4Vel[] = { 0.0, 0.0, 0.0 };
+// Source 5
+ALfloat source5Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source5Vel[] = { 0.0, 0.0, 0.0 };
+// Source 6
+ALfloat source6Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source6Vel[] = { 0.0, 0.0, 0.0 };
+
 
 // Buffers
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
 ALuint environment[NUM_ENVIRONMENTS];
+
 // Configs
 ALsizei size, freq;
 ALenum format;
@@ -282,7 +293,7 @@ ALvoid* data;
 int ch;
 ALboolean loop;
 //Este arreglo controla la ejecucion del sonido
-std::vector<bool> sourcesPlay = { true, true, true, true };
+std::vector<bool> sourcesPlay = { true, false, false, false, false, false };
 
 
 // Se definen todos las funciones.
@@ -304,15 +315,25 @@ void processObstacles(std::string name);
 void gameOver();
 
 void gameOver() {
+
+	isGameOver = true;
+
+	alSourcePlay(source[3]);
+	alSourceStop(source[0]);
+	alSourceStop(source[1]);
+	alSourceStop(source[2]);
+
+	texturaActivaID = texturaGameoverID;
+
 	stopTime = runningTime;
 	isRunning = false;
-	animationIndex = 3;
-	
+	animationIndex = 3;	
 	if (stopTime > bestScore)
 	{
 		bestScore = stopTime;
 		score.setScore(bestScore);
 	}
+	
 }
 
 void processObstacles(std::string name) {
@@ -895,13 +916,46 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		// a los datos
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
 			GL_BGRA, GL_UNSIGNED_BYTE, data);
-		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
+		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)menu
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureMainMenu.freeImage(bitmap);
+
+	// Definiendo la textura a utilizar para el Gameover
+	Texture textureMainGameover("../Textures/GameOverUIReiniciar.png");
+	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
+	bitmap = textureMainGameover.loadImage();
+	// Convertimos el mapa de bits en un arreglo unidimensional de tipo unsigned char
+	data = textureMainGameover.convertToData(bitmap, imageWidth,
+		imageHeight);
+	// Creando la textura con id 1
+	glGenTextures(1, &texturaGameoverID);
+	// Enlazar esa textura a una tipo de textura de 2D.
+	glBindTexture(GL_TEXTURE_2D, texturaGameoverID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Verifica si se pudo abrir la textura
+	if (data) {
+		// Transferis los datos de la imagen a memoria
+		// Tipo de textura, Mipmaps, Formato interno de openGL, ancho, alto, Mipmaps,
+		// Formato interno de la libreria de la imagen, el tipo de dato y al apuntador
+		// a los datos
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		// Generan los niveles del mipmap (OpenGL es el ecargado de realizarlos)
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	// Libera la memoria de la textura
+	textureMainGameover.freeImage(bitmap);
 
 	// Definiendo la textura a utilizar para la seleccion de personaje FINN
 	Texture textureFinnSelect("../Textures/CharacterSelFinn.png");
@@ -1047,10 +1101,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Config source 0
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
-	buffer[0] = alutCreateBufferFromFile("../sounds/fountain.wav");
-	buffer[1] = alutCreateBufferFromFile("../sounds/fire.wav");
-	buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
-	buffer[3] = alutCreateBufferFromFile("../sounds/silbato.wav");
+	buffer[0] = alutCreateBufferFromFile("../sounds/bg.wav");
+	buffer[1] = alutCreateBufferFromFile("../sounds/running.wav");
+	buffer[2] = alutCreateBufferFromFile("../sounds/crowd.wav");
+	buffer[3] = alutCreateBufferFromFile("../sounds/gameOverBG.wav");
+	buffer[4] = alutCreateBufferFromFile("../sounds/jump.wav");
+	buffer[5] = alutCreateBufferFromFile("../sounds/gameOver.wav");
+	buffer[6] = alutCreateBufferFromFile("../sounds/button.wav");
 
 	int errorAlut = alutGetError();
 	if (errorAlut != ALUT_ERROR_NO_ERROR) {
@@ -1078,7 +1135,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
 
 	alSourcef(source[1], AL_PITCH, 1.0f);
-	alSourcef(source[1], AL_GAIN, 3.0f);
+	alSourcef(source[1], AL_GAIN, 0.8f);
 	alSourcefv(source[1], AL_POSITION, source1Pos);
 	alSourcefv(source[1], AL_VELOCITY, source1Vel);
 	alSourcei(source[1], AL_BUFFER, buffer[1]);
@@ -1086,20 +1143,44 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	alSourcef(source[1], AL_MAX_DISTANCE, 2000);
 
 	alSourcef(source[2], AL_PITCH, 1.0f);
-	alSourcef(source[2], AL_GAIN, 0.3f);
+	alSourcef(source[2], AL_GAIN, 2.0f);
 	alSourcefv(source[2], AL_POSITION, source2Pos);
 	alSourcefv(source[2], AL_VELOCITY, source2Vel);
 	alSourcei(source[2], AL_BUFFER, buffer[2]);
 	alSourcei(source[2], AL_LOOPING, AL_TRUE);
-	alSourcef(source[2], AL_MAX_DISTANCE, 500);
+	alSourcef(source[2], AL_MAX_DISTANCE, 2000);
 
 	alSourcef(source[3], AL_PITCH, 1.0f);
-	alSourcef(source[3], AL_GAIN, 0.3f);
+	alSourcef(source[3], AL_GAIN, 3.0f);
 	alSourcefv(source[3], AL_POSITION, source3Pos);
 	alSourcefv(source[3], AL_VELOCITY, source3Vel);
 	alSourcei(source[3], AL_BUFFER, buffer[3]);
-	alSourcei(source[3], AL_LOOPING, AL_FALSE);
+	alSourcei(source[3], AL_LOOPING, AL_TRUE);
 	alSourcef(source[3], AL_MAX_DISTANCE, 500);
+
+	alSourcef(source[4], AL_PITCH, 1.0f);
+	alSourcef(source[4], AL_GAIN, 2.0f);
+	alSourcefv(source[4], AL_POSITION, source4Pos);
+	alSourcefv(source[4], AL_VELOCITY, source4Vel);
+	alSourcei(source[4], AL_BUFFER, buffer[4]);
+	alSourcei(source[4], AL_LOOPING, AL_FALSE);
+	alSourcef(source[4], AL_MAX_DISTANCE, 500);
+
+	alSourcef(source[5], AL_PITCH, 1.0f);
+	alSourcef(source[5], AL_GAIN, 0.3f);
+	alSourcefv(source[5], AL_POSITION, source5Pos);
+	alSourcefv(source[5], AL_VELOCITY, source5Vel);
+	alSourcei(source[5], AL_BUFFER, buffer[5]);
+	alSourcei(source[5], AL_LOOPING, AL_FALSE);
+	alSourcef(source[5], AL_MAX_DISTANCE, 500);
+
+	alSourcef(source[6], AL_PITCH, 1.0f);
+	alSourcef(source[6], AL_GAIN, 0.3f);
+	alSourcefv(source[6], AL_POSITION, source6Pos);
+	alSourcefv(source[6], AL_VELOCITY, source6Vel);
+	alSourcei(source[6], AL_BUFFER, buffer[6]);
+	alSourcei(source[6], AL_LOOPING, AL_FALSE);
+	alSourcef(source[6], AL_MAX_DISTANCE, 500);
 }
 
 	void destroy() {
@@ -1172,6 +1253,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/**************************LIBERACION DE MEMORIA DE TEXTURAS************************/
 		glDeleteTextures(1, &texturaActivaID);
 		glDeleteTextures(1, &texturaMenuID);
+		glDeleteTextures(1, &texturaGameoverID);
 		glDeleteTextures(1, &texturaSelFinnID);
 		glDeleteTextures(1, &texturaSelJakeID);
 		glDeleteTextures(1, &texturaSelLegoID);
@@ -1266,7 +1348,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				}
 			}
 			else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE && estadoActual == CHOOSEPLAYER)
+			{
 				presionarOpcion3 = false;
+			}
 
 			if (!presionarOpcion2 && glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 				presionarOpcion2 = true;
@@ -1278,7 +1362,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				}
 			}
 			else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE && estadoActual == CHOOSEPLAYER)
+			{
 				presionarOpcion2 = false;
+			}
 
 		}
 		
@@ -1359,7 +1445,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		/* Controles Player*/
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			
+			alSourcePlay(source[4]);
 			if (step == 3 && !isPress)
 				step = 2;
 			else if ((step == 1 || step == 2) && !isPress)
@@ -1370,6 +1456,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		}
 		else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
+			alSourcePlay(source[4]);
 			if ((step == 3 || step == 2) && !isPress)
 				step = 3;
 			else if (step == 1 && !isPress)
@@ -1396,12 +1483,16 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			tmv = 0;
 			startTimeJump = currTime;
 			animationIndex = 4;
+			alSourcePlay(source[4]);
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 		{
 			isRunning = true;
 			isStart = false;
+			alSourcePlay(source[0]);
+			alSourcePlay(source[1]);
+			alSourcePlay(source[2]);
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
@@ -1864,45 +1955,47 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				{
 					if (it != jt && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second)))
 					{
-						//std::cout << "Existe colisión entre: " << it->first << " y " << jt->first << std::endl;
 						isCollision = true;
 					}
 				}
 				addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
 			}
-
-			std::map<std::string, bool>::iterator it2;
-			for (it2 = collisionDetection.begin(); it2 != collisionDetection.end(); it2++)
+			if (isRunning)
 			{
-				std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator
-					modeloBuscadoOBB = collidersOBB.find(it2->first);
-				std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator
-					modeloBuscadoSBB = collidersSBB.find(it2->first);
-
-				if (modeloBuscadoSBB != collidersSBB.end())
+				std::map<std::string, bool>::iterator it2;
+				for (it2 = collisionDetection.begin(); it2 != collisionDetection.end(); it2++)
 				{
-					if (!it2->second)
-					{
-						addOrUpdateColliders(collidersSBB, it2->first);
-					}
-				}
+					std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator
+						modeloBuscadoOBB = collidersOBB.find(it2->first);
+					std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator
+						modeloBuscadoSBB = collidersSBB.find(it2->first);
 
-				if (modeloBuscadoOBB != collidersOBB.end())
-				{
-					if (!it2->second)
+					if (modeloBuscadoSBB != collidersSBB.end())
 					{
-						addOrUpdateColliders(collidersOBB, it2->first);
-					}
-					else
-					{
-						if (modeloBuscadoOBB->first.compare("player") == 0)
+						if (!it2->second)
 						{
-							std::cout << "Hay colision con player" << std::endl;
-							gameOver();
+							addOrUpdateColliders(collidersSBB, it2->first);
+						}
+					}
+
+					if (modeloBuscadoOBB != collidersOBB.end())
+					{
+						if (!it2->second)
+						{
+							addOrUpdateColliders(collidersOBB, it2->first);
+						}
+						else
+						{
+							if (modeloBuscadoOBB->first.compare("player") == 0)
+							{
+								alSourcePlay(source[5]);
+								gameOver();
+							}
 						}
 					}
 				}
 			}
+			
 
 			/*******************************************
 			 * Render de colliders
@@ -2038,9 +2131,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		}
 		glfwSwapBuffers(window);
 
-		/****************************+
+		/****************************
 		 * Open AL sound data
-		 */
+		 ****************************/
 		/*source0Pos[0] = modelMatrixFountain[3].x;
 		source0Pos[1] = modelMatrixFountain[3].y;
 		source0Pos[2] = modelMatrixFountain[3].z;
@@ -2057,20 +2150,20 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		alSourcefv(source[3], AL_POSITION, source3Pos);*/
 
 		// Listener for the Thris person camera
-	/*	listenerPos[0] = modelMatrixMayow[3].x;
-		listenerPos[1] = modelMatrixMayow[3].y;
-		listenerPos[2] = modelMatrixMayow[3].z;
+		listenerPos[0] = modelMatrixPlayer[3].x;
+		listenerPos[1] = modelMatrixPlayer[3].y;
+		listenerPos[2] = modelMatrixPlayer[3].z;
 		alListenerfv(AL_POSITION, listenerPos);
 
-		glm::vec3 upModel = glm::normalize(modelMatrixMayow[1]);
-		glm::vec3 frontModel = glm::normalize(modelMatrixMayow[2]);
+		glm::vec3 upModel = glm::normalize(modelMatrixPlayer[1]);
+		glm::vec3 frontModel = glm::normalize(modelMatrixPlayer[2]);
 
 		listenerOri[0] = frontModel.x;
 		listenerOri[1] = frontModel.y;
 		listenerOri[2] = frontModel.z;
 		listenerOri[3] = upModel.x;
 		listenerOri[4] = upModel.y;
-		listenerOri[5] = upModel.z;*/
+		listenerOri[5] = upModel.z;
 
 		// Listener for the First person camera
 		listenerPos[0] = camera->getPosition().x;
@@ -2085,12 +2178,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		listenerOri[5] = camera->getUp().z;
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
-		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
+	/*	for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
 			if (sourcesPlay[i]) {
 				sourcesPlay[i] = false;
 				alSourcePlay(source[i]);
 			}
-		}
+		}*/
 
 
 	}
