@@ -150,8 +150,12 @@ float startTimeCont = 0.0f, pauseTime = 0.0f, runningTime = 0.0f, stopTime = 0.0
 Terrain terrain(-1, -1, 200, 10, "../Textures/heightmap2.png");
 GLuint skyboxTextureID;
 
+//UI
 FontTypeRendering::FontTypeRendering* textRender;
 FontTypeRendering::FontTypeRendering* textBestScore;
+FontTypeRendering::FontTypeRendering* textStartGame;
+int startTextSize = 80;
+float startTextX = -0.5;
 
 /********************************DECLARACION DE TEXTURAS************************/
 GLuint texturaMenuID, texturaSelFinnID, texturaSelJakeID, texturaSelLegoID, texturaActivaID, texturaGameoverID;
@@ -478,6 +482,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	textBestScore = new FontTypeRendering::FontTypeRendering(screenWidth, screenHeight);
 	textBestScore->Initialize();
+
+	textStartGame = new FontTypeRendering::FontTypeRendering(screenWidth, screenHeight);
+	textStartGame->Initialize();
 
 	// Definimos el tamanio de la imagen
 	int imageWidth, imageHeight;
@@ -1239,20 +1246,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			}
 			const unsigned char* botones = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &numberBotones);
 			//std::cout << "numero de botones " << numberBotones << std::endl;
-			if (botones[0] == GLFW_PRESS)
-				std::cout << "se presiona 0" << std::endl;
-			if (botones[1] == GLFW_PRESS)
-				std::cout << "se presiona 1" << std::endl;
-			if (botones[2] == GLFW_PRESS)
-				std::cout << "se presiona 2" << std::endl;
-			if (botones[3] == GLFW_PRESS)
-				std::cout << "se presiona 3" << std::endl;
-			if (botones[4] == GLFW_PRESS)
-				std::cout << "se presiona 4" << std::endl;
-			if (botones[5] == GLFW_PRESS)
-				std::cout << "se presiona 5" << std::endl;
-			if (botones[6] == GLFW_PRESS)
-				std::cout << "se presiona 6" << std::endl;
+		
 			if (botones[7] == GLFW_PRESS)
 			{
 				std::cout << "se presiona 7" << std::endl;
@@ -1268,10 +1262,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 				isRunning = !isRunning;
 			}
 
-			if (botones[9] == GLFW_PRESS)
-				std::cout << "se presiona 9" << std::endl;
-			if (botones[10] == GLFW_PRESS)
-				std::cout << "se presiona 10" << std::endl;
 			if (botones[11] == GLFW_PRESS)
 			{
 				std::cout << "se presiona right" << std::endl;
@@ -1854,6 +1844,23 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		miliTxt.str("");
 		segTxt.str("");
 		minTxt.str("");
+
+		if (!isRunning && !isGameOver)
+		{
+			glEnable(GL_BLEND);
+			textStartGame->render("Presiona start", startTextX, 0.2, startTextSize, 1.0, 0.04705, 0.4196);
+			glDisable(GL_BLEND);
+			if (startTextSize <= 80)
+			{
+				startTextSize = startTextSize + 1;
+				startTextX = startTextX - 0.00625;
+
+			}else if (startTextSize >= 120)
+			{
+				startTextSize = startTextSize - 1;
+				startTextX = startTextX + 0.00625;
+			}
+		}
 
 		/*********************
 		* Maquinas de estado *
