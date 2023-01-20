@@ -90,7 +90,6 @@ glm::vec3 ambientLight, diffuseLight, specularLight, directionLight;
 
 //Camaras
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromPlayer = 7.0f;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -118,7 +117,7 @@ Model modelObstaculo10;
 
 //Variables obstaculos
 float offsetVelObs = 5.0f;
-float intervaloObstaculos = 10.0f;
+float intervaloObstaculos = 3.0f;
 int sizeObstaculos = 0;
 std::vector<std::string> namesObs;
 
@@ -162,12 +161,12 @@ GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
 GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 GL_TEXTURE_CUBE_MAP_NEGATIVE_Z };
 
-std::string fileNames[6] = { "../Textures/mp_bloodvalley/blood-valley_ft.tga",
-		"../Textures/mp_bloodvalley/blood-valley_bk.tga",
-		"../Textures/mp_bloodvalley/blood-valley_up.tga",
-		"../Textures/mp_bloodvalley/blood-valley_dn.tga",
-		"../Textures/mp_bloodvalley/blood-valley_rt.tga",
-		"../Textures/mp_bloodvalley/blood-valley_lf.tga" };
+std::string fileNames[6] = { "../Textures/Skybox/corona_ft.png",
+		"../Textures/Skybox/corona_bk.png",
+		"../Textures/Skybox/corona_up.png",
+		"../Textures/Skybox/corona_dn.png",
+		"../Textures/Skybox/corona_rt.png",
+		"../Textures/Skybox/corona_lf.png" };
 
 bool exitApp = false;
 int lastMousePosX, offsetX = 0;
@@ -184,11 +183,11 @@ int animationIndex = 0;
 
 double deltaTime;
 double currTime, lastTime;
-double velocity = 0.1;
+double velocity = 0.3;
 
 //Variables para el salto
 bool isJump = false;
-float gravity = 3.1f;
+float gravity = 1.5f;
 double tmv = 0.0;
 double startTimeJump = 0.0;
 
@@ -1197,63 +1196,159 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			int numberAxes, numberBotones;
 			const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &numberAxes);
 			//std::cout << "Numero de ejes:... " << numberAxes << std::endl;
-			//std::cout << "Axes[0]->" << axes[0] << std:: endl;
-			//std::cout << "Axes[1]->" << axes[1] << std::endl;
-			//std::cout << "Axes[2]->" << axes[2] << std::endl;
-			//std::cout << "Axes[3]->" << axes[3] << std::endl;
-			//std::cout << "Axes[4]->" << axes[4] << std::endl;
-			//std::cout << "Axes[5]->" << axes[5] << std::endl;
 
-			if (fabs(axes[1]) > 0.2f)
+			if (fabs(axes[0]) > 1.0f)
 			{
-				modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0, 0, axes[1] * 0.1f));
-				animationIndex = 0;
+				std::cout << "Soy axes 0" << std::endl;
 			}
 
-			if (fabs(axes[0]) > 0.2f)
+			if (fabs(axes[1]) > 1.0f)
 			{
-				modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-axes[0] * 0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
-				animationIndex = 0;
+				std::cout << "Soy axes 1" << std::endl;
 			}
 
-			if (fabs(-axes[2]) > 0.2f)
+			if (fabs(axes[2]) > 1.0f)
 			{
-				camera->mouseMoveCamera(axes[2] * 0.5f, 0.0f, deltaTime);
+				std::cout << "Soy axes 2" << std::endl;
 			}
 
-			if (fabs(-axes[3]) > 0.2f)
+			if (fabs(axes[3]) > 1.0f)
 			{
-				camera->mouseMoveCamera(0.0f, -axes[3] * 0.5f, deltaTime);
+				std::cout << "Soy axes 3" << std::endl;
+			}
+			if (fabs(axes[4]) > 0.5f)
+			{
+				std::cout << "Soy axes 4" << std::endl;
+			}
+
+			if (fabs(axes[5]) > 0.5f)
+			{
+				std::cout << "Soy axes 5" << std::endl;
 			}
 			const unsigned char* botones = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &numberBotones);
 			//std::cout << "numero de botones " << numberBotones << std::endl;
-			//if (botones[0] == GLFW_PRESS)
-			//	std::cout << "se presiona" << std::endl;
-			if (!isJump && botones[0] == GLFW_PRESS)
+			if (botones[0] == GLFW_PRESS)
+				std::cout << "se presiona 0" << std::endl;
+			if (botones[1] == GLFW_PRESS)
+				std::cout << "se presiona 1" << std::endl;
+			if (botones[2] == GLFW_PRESS)
+				std::cout << "se presiona 2" << std::endl;
+			if (botones[3] == GLFW_PRESS)
+				std::cout << "se presiona 3" << std::endl;
+			if (botones[4] == GLFW_PRESS)
+				std::cout << "se presiona 4" << std::endl;
+			if (botones[5] == GLFW_PRESS)
+				std::cout << "se presiona 5" << std::endl;
+			if (botones[6] == GLFW_PRESS)
+				std::cout << "se presiona 6" << std::endl;
+			if (botones[7] == GLFW_PRESS)
+			{
+				std::cout << "se presiona 7" << std::endl;
+				isRunning = true;
+				isStart = false;
+				alSourcePlay(source[0]);
+				alSourcePlay(source[1]);
+				alSourcePlay(source[2]);
+				
+			}
+			if (botones[8] == GLFW_PRESS)
+			{
+				isRunning = !isRunning;
+			}
+
+			if (botones[9] == GLFW_PRESS)
+				std::cout << "se presiona 9" << std::endl;
+			if (botones[10] == GLFW_PRESS)
+				std::cout << "se presiona 10" << std::endl;
+			if (botones[11] == GLFW_PRESS)
+			{
+				std::cout << "se presiona right" << std::endl;
+				alSourcePlay(source[4]);
+				if ((step == 3 || step == 2) && !isPress)
+					step = 3;
+				else if (step == 1 && !isPress)
+					step = 2;
+				std::cout << "Step: " << step << std::endl;
+				isRight = true;
+				isPress = true;
+			}
+				
+			if (botones[12] == GLFW_PRESS)
+				std::cout << "se presiona 12" << std::endl;
+			if (botones[13] == GLFW_PRESS)
+			{
+				std::cout << "se presiona left" << std::endl;
+				alSourcePlay(source[4]);
+				if (step == 3 && !isPress)
+					step = 2;
+				else if ((step == 1 || step == 2) && !isPress)
+					step = 1;
+				std::cout << "Step: " << step << std::endl;
+				isRight = false;
+				isPress = true;
+			}
+
+			bool jumpStatus = botones[0] == GLFW_PRESS;
+			if (!isJump && jumpStatus)
 			{
 				isJump = true;
 				tmv = 0;
 				startTimeJump = currTime;
+				animationIndex = 4;
+				alSourcePlay(source[4]);
+			}
+				
+			if (!iniciaPartida) {
+				bool statusEnter = botones[3] == GLFW_PRESS;
+
+				if (!presionarOpcion && statusEnter && estadoActual == MENU) {
+					presionarOpcion = true;
+					texturaActivaID = texturaSelFinnID;
+					estadoActual = CHOOSEPLAYER;
+
+				}
+				else if (!presionarOpcion && statusEnter && estadoActual == CHOOSEPLAYER) {
+					iniciaPartida = true;
+					estadoActual = PLAYGAME;
+				}
+				else if (botones[3] == GLFW_RELEASE) {
+					presionarOpcion = false;
+				}
+
+				if (!presionarOpcion3 && botones[13] == GLFW_PRESS && estadoActual == CHOOSEPLAYER) {
+					presionarOpcion3 = true;
+					if (texturaActivaID == texturaSelJakeID) {
+						texturaActivaID = texturaSelFinnID;
+					}
+					else if (texturaActivaID == texturaSelLegoID) {
+						texturaActivaID = texturaSelJakeID;
+					}
+				}
+				else if (botones[13] == GLFW_RELEASE && estadoActual == CHOOSEPLAYER)
+				{
+					presionarOpcion3 = false;
+				}
+
+				if (!presionarOpcion2 && botones[11] == GLFW_PRESS) {
+					presionarOpcion2 = true;
+					if (texturaActivaID == texturaSelFinnID) {
+						texturaActivaID = texturaSelJakeID;
+					}
+					else if (texturaActivaID == texturaSelJakeID) {
+						texturaActivaID = texturaSelLegoID;
+					}
+				}
+				else if (botones[11] == GLFW_RELEASE && estadoActual == CHOOSEPLAYER)
+				{
+					presionarOpcion2 = false;
+				}
+
 			}
 		}
 
-		/*if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-			camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-			camera->mouseMoveCamera(0.0, offsetY, deltaTime);*/
+		
 		offsetX = 0;
 		offsetY = 0;
-
-		// Seleccionar modelo
-		//if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
-		//	enableCountSelected = false;
-		//	modelSelected++;
-		//	std::cout << "modelSelected = " << modelSelected << std::endl;
-		//	if (modelSelected > 3)
-		//		modelSelected = 0;
-		//}
-		//else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
-		//	enableCountSelected = true;
 
 		/* Controles Player*/
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -1278,16 +1373,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			isRight = true;
 			isPress = true;
 		}
-		else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			//modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, 0.03f));
-			//animationIndex = 1;
-		}
-		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			//modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, -0.03f));
-			//animationIndex = 1; 
-		}
+
 		//Salto
 		bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 		if (!isJump && keySpaceStatus)
@@ -1307,7 +1393,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			alSourcePlay(source[1]);
 			alSourcePlay(source[2]);
 		}
-
+		//pausa
 		if (glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
 		{
 			isRunning = !isRunning;
@@ -1508,92 +1594,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			/*******************************************
 			 * Propiedades SpotLights
 			 *******************************************/
-			/*shaderMulLighting.setInt("spotLightCount", 1);
-			shaderTerrain.setInt("spotLightCount", 1);
-			glm::vec3 spotPosition = glm::vec3(modelMatrixHeli[3]);
-
-			shaderMulLighting.setVectorFloat3("spotLights[0].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
-			shaderMulLighting.setVectorFloat3("spotLights[0].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
-			shaderMulLighting.setVectorFloat3("spotLights[0].light.specular", glm::value_ptr(glm::vec3(0.6, 0.6, 0.03)));
-			shaderMulLighting.setVectorFloat3("spotLights[0].position", glm::value_ptr(spotPosition));
-			shaderMulLighting.setVectorFloat3("spotLights[0].direction", glm::value_ptr(glm::vec3(0.0f, -1.0f, 0.0f)));
-			shaderMulLighting.setFloat("spotLights[0].constant", 1.0f);
-			shaderMulLighting.setFloat("spotLights[0].linear", 0.02f);
-			shaderMulLighting.setFloat("spotLights[0].quadratic", 0.01f);
-			shaderMulLighting.setFloat("spotLights[0].cutOff", cos(glm::radians(12.5f)));
-			shaderMulLighting.setFloat("spotLights[0].outerCutOff", cos(glm::radians(15.0f)));
-
-			shaderTerrain.setVectorFloat3("spotLights[0].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
-			shaderTerrain.setVectorFloat3("spotLights[0].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
-			shaderTerrain.setVectorFloat3("spotLights[0].light.specular", glm::value_ptr(glm::vec3(0.6, 0.6, 0.03)));
-			shaderTerrain.setVectorFloat3("spotLights[0].position", glm::value_ptr(spotPosition));
-			shaderTerrain.setVectorFloat3("spotLights[0].direction", glm::value_ptr(glm::vec3(0.0f, -1.0f, 0.0f)));
-			shaderTerrain.setFloat("spotLights[0].constant", 1.0f);
-			shaderTerrain.setFloat("spotLights[0].linear", 0.02f);
-			shaderTerrain.setFloat("spotLights[0].quadratic", 0.01f);
-			shaderTerrain.setFloat("spotLights[0].cutOff", cos(glm::radians(12.5f)));
-			shaderTerrain.setFloat("spotLights[0].outerCutOff", cos(glm::radians(15.0f)));*/
 
 			/*******************************************
 			 * Propiedades PointLights
 			 *******************************************/
-			/*shaderMulLighting.setInt("pointLightCount", lamp1Position.size() + lamp2Position.size());
-			shaderTerrain.setInt("pointLightCount", lamp1Position.size() + lamp2Position.size());
-			for (int i = 0; i < lamp1Position.size(); i++) {
-				glm::mat4 matrixAdjustLamp = glm::mat4(1.0f);
-				matrixAdjustLamp = glm::translate(matrixAdjustLamp, lamp1Position[i]);
-				matrixAdjustLamp = glm::rotate(matrixAdjustLamp, glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
-				matrixAdjustLamp = glm::scale(matrixAdjustLamp, glm::vec3(0.5, 0.5, 0.5));
-				matrixAdjustLamp = glm::translate(matrixAdjustLamp, glm::vec3(0, 10.3585, 0));
-				glm::vec3 lampPosition = glm::vec3(matrixAdjustLamp[3]);
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.58, 0.03)));
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(lampPosition));
-				shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
-				shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
-				shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.01);
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.58, 0.03)));
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(lampPosition));
-				shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
-				shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
-				shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
-			}
-
-			for (int i = 0; i < lamp2Position.size(); i++)
-			{
-				glm::mat4 matrixAdjustLamp = glm::mat4(1.0f);
-				matrixAdjustLamp = glm::translate(matrixAdjustLamp, lamp2Position[i]);
-				matrixAdjustLamp = glm::rotate(matrixAdjustLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0.0f, 1.0f, 0.0f));
-				matrixAdjustLamp = glm::scale(matrixAdjustLamp, glm::vec3(1.0f, 1.0f, 1.0f));
-				matrixAdjustLamp = glm::translate(matrixAdjustLamp, glm::vec3(0.7856f, 4.975f, 0.0f));
-				glm::vec3 lampPosition = glm::vec3(matrixAdjustLamp[3]);
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.ambient",
-					glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.diffuse",
-					glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.specular",
-					glm::value_ptr(glm::vec3(0.6, 0.58, 0.03)));
-				shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].position",
-					glm::value_ptr(lampPosition));
-				shaderMulLighting.setFloat("pointLights[" + std::to_string(i + lamp1Position.size()) + "].constant", 1.0f);
-				shaderMulLighting.setFloat("pointLights[" + std::to_string(i + lamp1Position.size()) + "].linear", 0.02f);
-				shaderMulLighting.setFloat("pointLights[" + std::to_string(i + lamp1Position.size()) + "].quadratic", 0.01f);
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.ambient",
-					glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.diffuse",
-					glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].light.specular",
-					glm::value_ptr(glm::vec3(0.6, 0.58, 0.03)));
-				shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i + lamp1Position.size()) + "].position",
-					glm::value_ptr(lampPosition));
-				shaderTerrain.setFloat("pointLights[" + std::to_string(i + lamp1Position.size()) + "].constant", 1.0f);
-				shaderTerrain.setFloat("pointLights[" + std::to_string(i + lamp1Position.size()) + "].linear", 0.02f);
-				shaderTerrain.setFloat("pointLights[" + std::to_string(i + lamp1Position.size()) + "].quadratic", 0.01f);
-			}*/
-
+			
 			if (!iniciaPartida)
 			{
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2070,8 +2075,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		}
 		glm::mat4 modelMatrixPlayerBody = glm::mat4(modelMatrixPlayer);
 		modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, glm::vec3(1.0f, 1.0f, 1.0f) * player.getModelScale());
-		if (isRunning)
+		if (isRunning && !isJump)
 			animationIndex = 1;
+		
 		modelPlayerAnim.setAnimationIndex(animationIndex);
 		modelPlayerAnim.render(modelMatrixPlayerBody);
 
